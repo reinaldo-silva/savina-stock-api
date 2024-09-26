@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15.0
+    container_name: stock_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: stock
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - stock-network
+
+volumes:
+  postgres_data:
+
+networks:
+  stock-network:

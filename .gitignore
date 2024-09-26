@@ -1,0 +1,61 @@
+# Binários e executáveis Go
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Diretório de compilação
+build/
+
+# Arquivos de cache Go
+*.out
+
+# Dependências
+vendor/
+
+# Arquivos de cache e pacotes Go
+*.log
+*.test
+*.mod
+*.sum
+
+# Diretórios de cache da IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração pessoais
+*.env
+.env.local
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.yml
+.dockerignore
+
+# Logs do Docker
+**/logs/
+logs/
+docker-compose*.log
+
+# Volumes do Docker
+**/data/
+volumes/
+
+# Configurações do PostgreSQL
+postgres_data/
+
+# Cobertura de teste
+*.coverprofile
+coverage.out
+
+# Arquivos temporários e de build
+/tmp/
+*.tmp
