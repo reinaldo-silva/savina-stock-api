@@ -41,7 +41,7 @@ Antes de executar o projeto, certifique-se de que você tem os seguintes itens i
    DB_HOST=postgres
    DB_USER=postgres
    DB_PASSWORD=secret
-   DB_NAME=ecommerce
+   DB_NAME=stock_db
    DB_PORT=5432
    SERVER_PORT=8080
    ```
