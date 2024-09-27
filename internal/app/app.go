@@ -10,7 +10,9 @@ import (
 	api "github.com/reinaldo-silva/savina-stock/api/product"
 	"github.com/reinaldo-silva/savina-stock/config"
 	domain "github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	provider "github.com/reinaldo-silva/savina-stock/internal/provider/cloudinary"
 	repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
+	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -37,13 +39,20 @@ func (a *App) Initialize(cfg *config.Config) {
 		log.Fatal("failed to migrate database: ", err)
 	}
 
+	cloudinaryConfig := config.LoadCloudinaryConfig()
+	cloudinaryProvider, err := provider.NewCloudinaryProvider(cloudinaryConfig)
+	if err != nil {
+		log.Fatal("failed to initialize cloudinary service: ", err)
+	}
+
 	a.Router = chi.NewRouter()
 
 	a.Router.Use(middleware.Logger)
 	a.Router.Use(middleware.Recoverer)
 
 	productRepo := repository.NewGormProductRepository(a.DB)
-	productUseCase := usecase.NewProductUseCase(productRepo)
+	imageService := service.NewImageService(cloudinaryProvider)
+	productUseCase := usecase.NewProductUseCase(productRepo, imageService)
 
 	productHandler := api.NewProductHandler(productUseCase)
 

@@ -16,6 +16,12 @@ type Config struct {
 	ServerPort string
 }
 
+type CloudinaryConfig struct {
+	CloudName string
+	APIKey    string
+	APISecret string
+}
+
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
@@ -32,6 +38,14 @@ func LoadConfig() *Config {
 	}
 
 	return config
+}
+
+func LoadCloudinaryConfig() CloudinaryConfig {
+	return CloudinaryConfig{
+		CloudName: os.Getenv("CLOUDINARY_CLOUD_NAME"),
+		APIKey:    os.Getenv("CLOUDINARY_API_KEY"),
+		APISecret: os.Getenv("CLOUDINARY_API_SECRET"),
+	}
 }
 
 func getEnv(key, fallback string) string {
