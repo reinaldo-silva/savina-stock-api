@@ -91,3 +91,23 @@ func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
 }
+
+func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+
+	slug := chi.URLParam(r, "slug")
+
+	err := h.useCase.Delete(slug)
+	if err != nil {
+
+		appError := error.NewAppError("Product not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(nil, "Product deleted successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}

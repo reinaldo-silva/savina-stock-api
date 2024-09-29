@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	domain "github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	"gorm.io/gorm"
 )
@@ -30,4 +32,12 @@ func (r *GormProductRepository) FindBySlug(slug string) (*domain.Product, error)
 		return nil, result.Error
 	}
 	return &product, nil
+}
+
+func (r *GormProductRepository) DeleteBySlug(slug string) error {
+	result := r.db.Where("slug = ?", slug).Delete(&domain.Product{})
+	if result.RowsAffected == 0 {
+		return errors.New("product not found")
+	}
+	return result.Error
 }

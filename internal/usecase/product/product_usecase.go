@@ -45,6 +45,14 @@ func (uc *ProductUseCase) GetBySlug(slug string) (*product.Product, error) {
 	return uc.repo.FindBySlug(slug)
 }
 
+func (uc *ProductUseCase) Delete(slug string) error {
+	err := uc.repo.DeleteBySlug(slug)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (pu *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {
 	url, err := pu.imageService.Upload("")
 	if err != nil {

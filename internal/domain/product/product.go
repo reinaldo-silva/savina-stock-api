@@ -24,6 +24,7 @@ type ProductRepository interface {
 	GetAll() ([]Product, error)
 	Create(product Product) error
 	FindBySlug(slug string) (*Product, error)
+	DeleteBySlug(slug string) error
 }
 
 func GenerateSlug() string {
