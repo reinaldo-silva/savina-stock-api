@@ -9,7 +9,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	api "github.com/reinaldo-silva/savina-stock/api/product"
 	"github.com/reinaldo-silva/savina-stock/config"
-	domain "github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	provider "github.com/reinaldo-silva/savina-stock/internal/provider/cloudinary"
 	repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
 	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
@@ -34,7 +35,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		log.Fatal("failed to connect database: ", err)
 	}
 
-	err = a.DB.AutoMigrate(&domain.Product{})
+	err = a.DB.AutoMigrate(&product.Product{}, &image.ProductImage{})
 	if err != nil {
 		log.Fatal("failed to migrate database: ", err)
 	}
