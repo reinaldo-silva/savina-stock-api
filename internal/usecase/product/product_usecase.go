@@ -53,8 +53,17 @@ func (uc *ProductUseCase) Delete(slug string) error {
 	return nil
 }
 
-func (pu *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {
-	url, err := pu.imageService.Upload("")
+func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (product.Product, error) {
+
+	product, err := uc.repo.UpdateBySlug(slug, updatedProduct)
+	if err != nil {
+		return product, err
+	}
+	return product, nil
+}
+
+func (uc *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {
+	url, err := uc.imageService.Upload("")
 	if err != nil {
 		return "", fmt.Errorf("failed to upload image: %v", err)
 	}

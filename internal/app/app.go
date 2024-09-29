@@ -62,6 +62,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Post("/", productHandler.CreateProduct)
 		r.Get("/{slug}", productHandler.GetProductBySlug)
 		r.Delete("/{slug}", productHandler.DeleteProduct)
+		r.Put("/{slug}", productHandler.UpdateProduct)
 	})
 
 }

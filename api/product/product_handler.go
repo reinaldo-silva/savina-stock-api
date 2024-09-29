@@ -111,3 +111,40 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
 }
+
+func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+
+	slug := chi.URLParam(r, "slug")
+
+	var updatedProduct product.Product
+	err := json.NewDecoder(r.Body).Decode(&updatedProduct)
+	if err != nil {
+		appError := error.NewAppError("Invalid input data", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	if updatedProduct.Name == "" || updatedProduct.Price <= 0 {
+		appError := error.NewAppError("Invalid product data", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	updatedProduct, err = h.useCase.Update(slug, updatedProduct)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(updatedProduct, "Product updated successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
