@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"github.com/reinaldo-silva/savina-stock/package/response/error"
@@ -68,6 +69,24 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appResponse := response.NewAppResponse(createdProduct, "Product created successfully", http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	product, err := h.useCase.GetBySlug(slug)
+	if err != nil {
+		appError := error.NewAppError("Product not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(product, "Product fetched successfully")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)

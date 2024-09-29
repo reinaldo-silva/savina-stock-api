@@ -41,6 +41,10 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 	return &p, nil
 }
 
+func (uc *ProductUseCase) GetBySlug(slug string) (*product.Product, error) {
+	return uc.repo.FindBySlug(slug)
+}
+
 func (pu *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {
 	url, err := pu.imageService.Upload("")
 	if err != nil {

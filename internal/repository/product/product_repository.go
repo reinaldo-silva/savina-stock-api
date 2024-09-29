@@ -22,3 +22,12 @@ func (r *GormProductRepository) GetAll() ([]domain.Product, error) {
 func (r *GormProductRepository) Create(p domain.Product) error {
 	return r.db.Create(&p).Error
 }
+
+func (r *GormProductRepository) FindBySlug(slug string) (*domain.Product, error) {
+	var product domain.Product
+	result := r.db.Where("slug = ?", slug).First(&product)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &product, nil
+}

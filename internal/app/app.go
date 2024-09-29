@@ -57,8 +57,11 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	productHandler := api.NewProductHandler(productUseCase)
 
-	a.Router.Get("/products", productHandler.GetProducts)
-	a.Router.Post("/products", productHandler.CreateProduct)
+	a.Router.Route("/products", func(r chi.Router) {
+		r.Get("/", productHandler.GetProducts)
+		r.Post("/", productHandler.CreateProduct)
+		r.Get("/{slug}", productHandler.GetProductBySlug)
+	})
 
 }
 

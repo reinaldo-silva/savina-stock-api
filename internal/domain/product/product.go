@@ -23,6 +23,7 @@ type Product struct {
 type ProductRepository interface {
 	GetAll() ([]Product, error)
 	Create(product Product) error
+	FindBySlug(slug string) (*Product, error)
 }
 
 func GenerateSlug() string {
