@@ -7,15 +7,15 @@ import (
 )
 
 type Product struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement"`
-	Name        string    `gorm:"type:varchar(100);not null"`
-	Slug        string    `gorm:"type:varchar(150);unique;not null"`
-	Description string    `gorm:"type:text"`
-	Price       float64   `gorm:"type:decimal(10,2);not null"`
-	Cost        float64   `gorm:"type:decimal(10,2);"`
-	Stock       int       `gorm:"not null"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
+	Slug        string    `gorm:"type:varchar(150);unique;not null" json:"slug"`
+	Description string    `gorm:"type:text" json:"description"`
+	Price       float64   `gorm:"type:decimal(10,2);not null" json:"price"`
+	Cost        float64   `gorm:"type:decimal(10,2);" json:"cost"`
+	Stock       int       `gorm:"not null" json:"stock"`
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 type ProductRepository interface {
