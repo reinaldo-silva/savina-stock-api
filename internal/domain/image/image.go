@@ -1,4 +1,4 @@
-package domain
+package image
 
 type ImageProvider interface {
 	UploadImage(filePath string) (string, error)

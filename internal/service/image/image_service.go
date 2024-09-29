@@ -1,14 +1,14 @@
-package service
+package image_service
 
 import (
-	domain "github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 )
 
 type ImageService struct {
-	provider domain.ImageProvider
+	provider image.ImageProvider
 }
 
-func NewImageService(provider domain.ImageProvider) *ImageService {
+func NewImageService(provider image.ImageProvider) *ImageService {
 	return &ImageService{provider}
 }
 

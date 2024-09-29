@@ -57,6 +57,7 @@ func (a *App) Initialize(cfg *config.Config) {
 	productHandler := api.NewProductHandler(productUseCase)
 
 	a.Router.Get("/products", productHandler.GetProducts)
+	a.Router.Post("/products", productHandler.CreateProduct)
 
 }
 

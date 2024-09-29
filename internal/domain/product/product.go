@@ -1,6 +1,10 @@
-package domain
+package product
 
-import "time"
+import (
+	"time"
+
+	"github.com/segmentio/ksuid"
+)
 
 type Product struct {
 	ID          uint      `gorm:"primaryKey;autoIncrement"`
@@ -17,4 +21,9 @@ type Product struct {
 type ProductRepository interface {
 	GetAll() ([]Product, error)
 	Create(product Product) error
+}
+
+func GenerateSlug() string {
+	id := ksuid.New().String()
+	return id[:8]
 }

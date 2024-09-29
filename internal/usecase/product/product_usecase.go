@@ -1,28 +1,44 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
 	"mime/multipart"
+	"strings"
 
-	domain "github.com/reinaldo-silva/savina-stock/internal/domain/product"
-	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
+	product "github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 )
 
 type ProductUseCase struct {
-	repo         domain.ProductRepository
-	imageService *service.ImageService
+	repo         product.ProductRepository
+	imageService *image_service.ImageService
 }
 
-func NewProductUseCase(repo domain.ProductRepository, cs *service.ImageService) *ProductUseCase {
+func NewProductUseCase(repo product.ProductRepository, cs *image_service.ImageService) *ProductUseCase {
 	return &ProductUseCase{repo: repo, imageService: cs}
 }
 
-func (uc *ProductUseCase) GetAllProducts() ([]domain.Product, error) {
+func (uc *ProductUseCase) GetAll() ([]product.Product, error) {
 	return uc.repo.GetAll()
 }
 
-func (uc *ProductUseCase) AddProduct(product domain.Product) error {
-	return uc.repo.Create(product)
+func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
+
+	if strings.TrimSpace(p.Slug) == "" {
+		p.Slug = product.GenerateSlug()
+	}
+
+	if strings.TrimSpace(p.Name) == "" {
+		return nil, errors.New("product name cannot be empty")
+	}
+
+	err := uc.repo.Create(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return &p, nil
 }
 
 func (pu *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {

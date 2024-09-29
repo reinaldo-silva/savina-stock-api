@@ -7,14 +7,14 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/reinaldo-silva/savina-stock/config"
-	domain "github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 )
 
 type CloudinaryProvider struct {
 	Client *cloudinary.Cloudinary
 }
 
-func NewCloudinaryProvider(cfg config.CloudinaryConfig) (domain.ImageProvider, error) {
+func NewCloudinaryProvider(cfg config.CloudinaryConfig) (image.ImageProvider, error) {
 	cld, err := cloudinary.NewFromParams(cfg.CloudName, cfg.APIKey, cfg.APISecret)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize Cloudinary: %v", err)

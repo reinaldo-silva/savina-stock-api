@@ -9,8 +9,8 @@ type GormProductRepository struct {
 	db *gorm.DB
 }
 
-func NewGormProductRepository(db *gorm.DB) domain.ProductRepository {
-	return &GormProductRepository{db}
+func NewGormProductRepository(db *gorm.DB) *GormProductRepository {
+	return &GormProductRepository{db: db}
 }
 
 func (r *GormProductRepository) GetAll() ([]domain.Product, error) {
@@ -19,7 +19,6 @@ func (r *GormProductRepository) GetAll() ([]domain.Product, error) {
 	return products, result.Error
 }
 
-func (r *GormProductRepository) Create(product domain.Product) error {
-	result := r.db.Create(&product)
-	return result.Error
+func (r *GormProductRepository) Create(p domain.Product) error {
+	return r.db.Create(&p).Error
 }
