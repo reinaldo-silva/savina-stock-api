@@ -16,6 +16,6 @@ func (se *ImageService) GetImage(publicID string) (string, error) {
 	return se.provider.GetImage(publicID)
 }
 
-func (se *ImageService) Upload(filePath string) (string, error) {
+func (se *ImageService) Upload(filePath string) (string, string, error) {
 	return se.provider.UploadImage(filePath)
 }

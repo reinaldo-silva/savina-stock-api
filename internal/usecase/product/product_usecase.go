@@ -61,7 +61,7 @@ func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (p
 	return product, nil
 }
 
-func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []string) error {
+func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []image.UploadedImage) error {
 	product, err := uc.repo.FindBySlug(slug)
 	if err != nil {
 		return err

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
@@ -169,7 +170,7 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var uploadedImages []string
+	var uploadedImages []image.UploadedImage
 	for _, fileHeader := range files {
 
 		file, err := fileHeader.Open()
@@ -201,7 +202,7 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uploadedURL, err := h.imageService.Upload(tempFile.Name())
+		uploadedURL, publicID, err := h.imageService.Upload(tempFile.Name())
 		if err != nil {
 			appError := error.NewAppError("Failed to upload the image", http.StatusInternalServerError)
 			w.Header().Set("Content-Type", "application/json")
@@ -210,7 +211,7 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uploadedImages = append(uploadedImages, uploadedURL)
+		uploadedImages = append(uploadedImages, image.UploadedImage{URL: uploadedURL, PublicID: publicID})
 
 		os.Remove(tempFile.Name())
 	}

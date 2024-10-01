@@ -13,11 +13,12 @@ func NewGormImageRepository(db *gorm.DB) *GormImageRepository {
 	return &GormImageRepository{db: db}
 }
 
-func (r *GormImageRepository) CreateManyImages(productID uint, imageURLs []string) error {
+func (r *GormImageRepository) CreateManyImages(productID uint, imageURLs []image.UploadedImage) error {
 	for _, url := range imageURLs {
 		image := image.ProductImage{
 			ProductID: productID,
-			ImageURL:  url,
+			ImageURL:  url.URL,
+			PublicID:  url.PublicID,
 			IsCover:   false,
 		}
 		if err := r.db.Create(&image).Error; err != nil {
