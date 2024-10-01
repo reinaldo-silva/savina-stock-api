@@ -80,3 +80,11 @@ func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []image.Uplo
 
 	return nil
 }
+
+func (uc *ProductUseCase) GetProductImages(productID uint) ([]image.ProductImage, error) {
+	images, err := uc.imageRepo.FindByProductID(productID)
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
+}

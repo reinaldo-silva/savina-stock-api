@@ -20,6 +20,7 @@ func (ProductImage) TableName() string {
 
 type ImageRepository interface {
 	CreateManyImages(productID uint, imageURLs []UploadedImage) error
+	FindByProductID(productID uint) ([]ProductImage, error)
 }
 
 type ImageProvider interface {

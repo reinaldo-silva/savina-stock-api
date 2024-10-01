@@ -230,3 +230,30 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
 }
+
+func (h *ProductHandler) GetProductImages(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	product, err := h.useCase.GetBySlug(slug)
+	if err != nil {
+		appError := error.NewAppError("Product not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	images, err := h.useCase.GetProductImages(product.ID)
+	if err != nil {
+		appError := error.NewAppError("Failed to fetch product images", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(images, "Images fetched successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}

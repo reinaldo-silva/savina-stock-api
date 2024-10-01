@@ -66,6 +66,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Delete("/{slug}", productHandler.DeleteProduct)
 		r.Put("/{slug}", productHandler.UpdateProduct)
 		r.Patch("/{slug}/upload-image", productHandler.UploadImages)
+		r.Get("/{slug}/images", productHandler.GetProductImages)
 	})
 
 }

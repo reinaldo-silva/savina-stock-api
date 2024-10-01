@@ -27,3 +27,11 @@ func (r *GormImageRepository) CreateManyImages(productID uint, imageURLs []image
 	}
 	return nil
 }
+
+func (r *GormImageRepository) FindByProductID(productID uint) ([]image.ProductImage, error) {
+	var images []image.ProductImage
+	if err := r.db.Where("product_id = ?", productID).Find(&images).Error; err != nil {
+		return nil, err
+	}
+	return images, nil
+}
