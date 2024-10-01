@@ -11,4 +11,5 @@ type Category struct {
 
 type CategoryRepository interface {
 	Create(category *Category) error
+	GetAll() ([]Category, error)
 }

@@ -43,3 +43,28 @@ func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(appResponse)
 }
+
+func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
+
+	categories, err := h.useCase.GetAllCategories()
+	if err != nil {
+		appError := error.NewAppError("Failed to fetch categories", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	if len(categories) == 0 {
+		appError := error.NewAppError("No categories found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(categories, "Categories fetched successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(appResponse)
+}

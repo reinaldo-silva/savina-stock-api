@@ -27,3 +27,11 @@ func (uc *CategoryUseCase) CreateCategory(category *category.Category) (*categor
 
 	return category, nil
 }
+
+func (uc *CategoryUseCase) GetAllCategories() ([]category.Category, error) {
+	categories, err := uc.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return categories, nil
+}

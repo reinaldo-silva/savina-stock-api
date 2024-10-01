@@ -16,3 +16,14 @@ func NewCategoryRepository(db *gorm.DB) category.CategoryRepository {
 func (repo *CategoryRepositoryImpl) Create(category *category.Category) error {
 	return repo.db.Create(category).Error
 }
+
+func (repo *CategoryRepositoryImpl) GetAll() ([]category.Category, error) {
+	var categories []category.Category
+
+	err := repo.db.Find(&categories).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
