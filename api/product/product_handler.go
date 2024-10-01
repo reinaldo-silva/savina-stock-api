@@ -3,21 +3,25 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"github.com/reinaldo-silva/savina-stock/package/response/error"
 	"github.com/reinaldo-silva/savina-stock/package/response/response"
 )
 
 type ProductHandler struct {
-	useCase *usecase.ProductUseCase
+	useCase      *usecase.ProductUseCase
+	imageService *image_service.ImageService
 }
 
-func NewProductHandler(uc *usecase.ProductUseCase) *ProductHandler {
-	return &ProductHandler{uc}
+func NewProductHandler(uc *usecase.ProductUseCase, cs *image_service.ImageService) *ProductHandler {
+	return &ProductHandler{uc, cs}
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
@@ -144,6 +148,83 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appResponse := response.NewAppResponse(updatedProduct, "Product updated successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
+
+	slug := chi.URLParam(r, "slug")
+
+	r.ParseMultipartForm(10 << 20)
+
+	files := r.MultipartForm.File["images"]
+
+	if len(files) > 5 {
+		appError := error.NewAppError("You can only upload up to 5 images", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	var uploadedImages []string
+	for _, fileHeader := range files {
+
+		file, err := fileHeader.Open()
+		if err != nil {
+			appError := error.NewAppError("Failed to open the image", http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+		defer file.Close()
+
+		tempFile, err := os.CreateTemp("", "upload-*.png")
+		if err != nil {
+			appError := error.NewAppError("Failed to create temp file", http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+		defer tempFile.Close()
+
+		_, err = io.Copy(tempFile, file)
+		if err != nil {
+			appError := error.NewAppError("Failed to save the image", http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+
+		uploadedURL, err := h.imageService.Upload(tempFile.Name())
+		if err != nil {
+			appError := error.NewAppError("Failed to upload the image", http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+
+		uploadedImages = append(uploadedImages, uploadedURL)
+
+		os.Remove(tempFile.Name())
+	}
+
+	err := h.useCase.AddImagesToProduct(slug, uploadedImages)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(uploadedImages, "Images uploaded successfully")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)

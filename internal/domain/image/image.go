@@ -17,6 +17,10 @@ func (ProductImage) TableName() string {
 	return "product_images"
 }
 
+type ImageRepository interface {
+	CreateManyImages(productID uint, imageURLs []string) error
+}
+
 type ImageProvider interface {
 	UploadImage(filePath string) (string, error)
 	GetImage(publicID string) (string, error)

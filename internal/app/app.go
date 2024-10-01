@@ -12,7 +12,8 @@ import (
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	provider "github.com/reinaldo-silva/savina-stock/internal/provider/cloudinary"
-	repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
+	image_repository "github.com/reinaldo-silva/savina-stock/internal/repository/image"
+	product_repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
 	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"gorm.io/driver/postgres"
@@ -51,11 +52,12 @@ func (a *App) Initialize(cfg *config.Config) {
 	a.Router.Use(middleware.Logger)
 	a.Router.Use(middleware.Recoverer)
 
-	productRepo := repository.NewGormProductRepository(a.DB)
+	productRepo := product_repository.NewGormProductRepository(a.DB)
+	imageRepo := image_repository.NewGormImageRepository(a.DB)
 	imageService := service.NewImageService(cloudinaryProvider)
-	productUseCase := usecase.NewProductUseCase(productRepo, imageService)
+	productUseCase := usecase.NewProductUseCase(productRepo, imageRepo)
 
-	productHandler := api.NewProductHandler(productUseCase)
+	productHandler := api.NewProductHandler(productUseCase, imageService)
 
 	a.Router.Route("/products", func(r chi.Router) {
 		r.Get("/", productHandler.GetProducts)
@@ -63,6 +65,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Get("/{slug}", productHandler.GetProductBySlug)
 		r.Delete("/{slug}", productHandler.DeleteProduct)
 		r.Put("/{slug}", productHandler.UpdateProduct)
+		r.Patch("/{slug}/upload-image", productHandler.UploadImages)
 	})
 
 }

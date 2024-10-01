@@ -3,20 +3,19 @@ package usecase
 import (
 	"errors"
 	"fmt"
-	"mime/multipart"
 	"strings"
 
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	product "github.com/reinaldo-silva/savina-stock/internal/domain/product"
-	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 )
 
 type ProductUseCase struct {
-	repo         product.ProductRepository
-	imageService *image_service.ImageService
+	repo      product.ProductRepository
+	imageRepo image.ImageRepository
 }
 
-func NewProductUseCase(repo product.ProductRepository, cs *image_service.ImageService) *ProductUseCase {
-	return &ProductUseCase{repo: repo, imageService: cs}
+func NewProductUseCase(repo product.ProductRepository, imageRepo image.ImageRepository) *ProductUseCase {
+	return &ProductUseCase{repo: repo, imageRepo: imageRepo}
 }
 
 func (uc *ProductUseCase) GetAll() ([]product.Product, error) {
@@ -62,11 +61,22 @@ func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (p
 	return product, nil
 }
 
-func (uc *ProductUseCase) UploadProductImage(productID string, file multipart.File) (string, error) {
-	url, err := uc.imageService.Upload("")
+func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []string) error {
+	product, err := uc.repo.FindBySlug(slug)
 	if err != nil {
-		return "", fmt.Errorf("failed to upload image: %v", err)
+		return err
 	}
 
-	return url, nil
+	if len(product.Images)+len(imageURLs) > 5 {
+		return fmt.Errorf("a product can have a maximum of 5 images")
+	}
+
+	fmt.Println(product.ID, imageURLs)
+
+	err = uc.imageRepo.CreateManyImages(product.ID, imageURLs)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
