@@ -7,15 +7,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	api "github.com/reinaldo-silva/savina-stock/api/product"
+	api_category "github.com/reinaldo-silva/savina-stock/api/category"
+	api_product "github.com/reinaldo-silva/savina-stock/api/product"
 	"github.com/reinaldo-silva/savina-stock/config"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	provider "github.com/reinaldo-silva/savina-stock/internal/provider/cloudinary"
+	category_repository "github.com/reinaldo-silva/savina-stock/internal/repository/category"
 	image_repository "github.com/reinaldo-silva/savina-stock/internal/repository/image"
 	product_repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
 	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
-	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
+	usecase_category "github.com/reinaldo-silva/savina-stock/internal/usecase/category"
+	usecase_product "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -36,7 +40,10 @@ func (a *App) Initialize(cfg *config.Config) {
 		log.Fatal("failed to connect database: ", err)
 	}
 
-	err = a.DB.AutoMigrate(&product.Product{}, &image.ProductImage{})
+	err = a.DB.AutoMigrate(
+		&product.Product{},
+		&image.ProductImage{},
+		&category.Category{})
 	if err != nil {
 		log.Fatal("failed to migrate database: ", err)
 	}
@@ -53,11 +60,16 @@ func (a *App) Initialize(cfg *config.Config) {
 	a.Router.Use(middleware.Recoverer)
 
 	productRepo := product_repository.NewGormProductRepository(a.DB)
+	categoryRepo := category_repository.NewCategoryRepository(a.DB)
 	imageRepo := image_repository.NewGormImageRepository(a.DB)
-	imageService := service.NewImageService(cloudinaryProvider)
-	productUseCase := usecase.NewProductUseCase(productRepo, imageRepo)
 
-	productHandler := api.NewProductHandler(productUseCase, imageService)
+	imageService := service.NewImageService(cloudinaryProvider)
+
+	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo)
+	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
+
+	productHandler := api_product.NewProductHandler(productUseCase, imageService)
+	categoryHandler := api_category.NewCategoryHandler(categoryUseCase)
 
 	a.Router.Route("/products", func(r chi.Router) {
 		r.Get("/", productHandler.GetProducts)
@@ -67,6 +79,10 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Put("/{slug}", productHandler.UpdateProduct)
 		r.Patch("/{slug}/upload-image", productHandler.UploadImages)
 		r.Get("/{slug}/images", productHandler.GetProductImages)
+	})
+
+	a.Router.Route("/category", func(r chi.Router) {
+		r.Post("/", categoryHandler.CreateCategory)
 	})
 
 }

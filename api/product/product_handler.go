@@ -1,8 +1,7 @@
-package api
+package api_product
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -45,8 +44,6 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct product.Product
 
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
-
-	fmt.Println(newProduct)
 
 	if err != nil {
 		appError := error.NewAppError("Invalid input data")
