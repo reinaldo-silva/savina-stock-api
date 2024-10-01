@@ -14,6 +14,11 @@ type ProductImage struct {
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
+type UploadedImage struct {
+	URL      string `json:"url"`
+	PublicID string `json:"public_id"`
+}
+
 func (ProductImage) TableName() string {
 	return "product_images"
 }
@@ -26,9 +31,4 @@ type ImageRepository interface {
 type ImageProvider interface {
 	UploadImage(filePath string) (string, string, error)
 	GetImage(publicID string) (string, error)
-}
-
-type UploadedImage struct {
-	URL      string `json:"url"`
-	PublicID string `json:"public_id"`
 }
