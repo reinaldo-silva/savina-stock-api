@@ -1,26 +1,26 @@
-# Usa a imagem Golang
+# Usa a imagem do Golang
 FROM golang:1.20-alpine
 
-# Define o diretório de trabalho dentro do container
+# Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copia os arquivos go.mod e go.sum para instalar as dependências primeiro
+# Copia apenas os arquivos go.mod e go.sum para a imagem
 COPY go.mod go.sum ./
 
 # Instala as dependências
 RUN go mod tidy
 
-# Copia o conteúdo do diretório cmd/api
-COPY cmd/api ./cmd/api
-
-# Copia o restante do conteúdo (caso precise de outras pastas)
+# Copia todo o conteúdo do diretório atual (incluindo o código-fonte) para a imagem
 COPY . .
 
-# Define o diretório para compilar a aplicação a partir de cmd/api/main.go
-RUN go build -o myapp ./cmd/api
+# Altera o diretório de trabalho para o diretório onde o main.go está localizado
+WORKDIR /app/cmd/api
 
-# Expõe a porta 8080
+# Compila a aplicação
+RUN go build -o myapp
+
+# Expõe a porta que a aplicação usará
 EXPOSE 8080
 
-# Define o comando para rodar a aplicação
+# Comando para rodar a aplicação
 CMD ["./myapp"]
