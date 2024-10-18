@@ -1,4 +1,4 @@
-# Savina Stock API
+# Savina Stock API V1.0
 
 Savina Stock API é uma aplicação desenvolvida em Go que fornece uma interface para gerenciar o estoque de produtos em um e-commerce. Esta API permite realizar operações CRUD (Criar, Ler, Atualizar e Deletar) em produtos, facilitando a administração de inventário.
 
