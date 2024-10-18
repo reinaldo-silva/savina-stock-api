@@ -21,7 +21,7 @@ jobs:
       - name: Deploy Go app to EC2
         run: |
           ssh -i pem_file.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /var/www/go-app
+            cd /var/www/savina-stock-api
 
             # Parar e remover o container Docker atual do Go
             docker stop go-app || true
