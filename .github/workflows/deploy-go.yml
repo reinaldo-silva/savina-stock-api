@@ -45,6 +45,17 @@ jobs:
             # Build da nova imagem Docker da aplicação Go
             docker build -t go-app -f Dockerfile .
 
+            # Verificar as variáveis de ambiente
+            echo "DB_HOST=${DB_HOST}"
+            echo "DB_USER=${DB_USER}"
+            echo "DB_PASSWORD=${DB_PASSWORD}"
+            echo "DB_NAME=${DB_NAME}"
+            echo "DB_PORT=${DB_PORT}"
+            echo "SERVER_PORT=${SERVER_PORT}"
+            echo "CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}"
+            echo "CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}"
+            echo "CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}"
+
             # Rodar o novo container Docker da aplicação Go com variáveis de ambiente
             docker run -d -p 8080:8080 \
               -e DB_HOST=${DB_HOST} \
