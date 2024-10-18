@@ -71,8 +71,6 @@ func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []image.Uplo
 		return fmt.Errorf("a product can have a maximum of 5 images")
 	}
 
-	fmt.Println(product.ID, imageURLs)
-
 	err = uc.imageRepo.CreateManyImages(product.ID, imageURLs)
 	if err != nil {
 		return err

@@ -54,7 +54,7 @@ func (sp *S3Provider) UploadImage(filePath string) (string, error) {
 		Body:        file,
 		ContentType: aws.String("image/jpeg"),
 	})
-	fmt.Println(err)
+
 	if err != nil {
 		return "", fmt.Errorf("could not upload image to S3: %v", err)
 	}
@@ -71,8 +71,6 @@ func (sp *S3Provider) DownloadImage(uuid string) (*bytes.Buffer, string, error) 
 		Bucket: aws.String(sp.Bucket),
 		Key:    aws.String(s3Key),
 	})
-
-	fmt.Println(result)
 
 	if err != nil {
 		return nil, "", fmt.Errorf("could not download image from S3: %v", err)
