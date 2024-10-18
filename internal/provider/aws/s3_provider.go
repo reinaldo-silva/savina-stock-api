@@ -1,6 +1,7 @@
 package s3_provider
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -33,41 +34,56 @@ func NewS3Provider(cfg config.S3Config) (image.ImageProvider, error) {
 	}, nil
 }
 
-func (sp *S3Provider) UploadImage(filePath string) (string, string, error) {
+func (sp *S3Provider) UploadImage(filePath string) (string, error) {
 	ctx := context.Background()
 
 	file, err := os.Open(filePath)
 
 	if err != nil {
-		return "", "", fmt.Errorf("could not open file: %v", err)
+		return "", fmt.Errorf("could not open file: %v", err)
 	}
 	defer file.Close()
 
-	// Gera um UUID para o nome do arquivo
 	fileID := uuid.New().String()
 	fileExt := filepath.Ext(filePath)
 	s3Key := fmt.Sprintf("%s%s", fileID, fileExt)
 
-	// Define as opções de upload
 	_, err = sp.Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(sp.Bucket),
 		Key:         aws.String(s3Key),
 		Body:        file,
-		ContentType: aws.String("image/jpeg"), // Ajuste o tipo de conteúdo conforme necessário
+		ContentType: aws.String("image/jpeg"),
 	})
 	fmt.Println(err)
 	if err != nil {
-		return "", "", fmt.Errorf("could not upload image to S3: %v", err)
+		return "", fmt.Errorf("could not upload image to S3: %v", err)
 	}
 
-	// Gera a URL do objeto
-	url := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", sp.Bucket, s3Key)
-	return url, fileID, nil
+	return s3Key, nil
 }
 
-func (sp *S3Provider) GetImage(fileID string) (string, error) {
-	// Gera a URL do objeto com o UUID (sem extensão)
-	s3Key := fmt.Sprintf("%s.jpg", fileID) // Ajuste a extensão conforme necessário
-	url := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", sp.Bucket, s3Key)
-	return url, nil
+func (sp *S3Provider) DownloadImage(uuid string) (*bytes.Buffer, string, error) {
+	ctx := context.Background()
+
+	s3Key := uuid
+
+	result, err := sp.Client.GetObjectWithContext(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(sp.Bucket),
+		Key:    aws.String(s3Key),
+	})
+
+	fmt.Println(result)
+
+	if err != nil {
+		return nil, "", fmt.Errorf("could not download image from S3: %v", err)
+	}
+	defer result.Body.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(result.Body)
+	if err != nil {
+		return nil, "", fmt.Errorf("could not read image data: %v", err)
+	}
+
+	return buf, *result.ContentType, nil
 }

@@ -1,6 +1,7 @@
 package image
 
 import (
+	"bytes"
 	"time"
 )
 
@@ -29,6 +30,6 @@ type ImageRepository interface {
 }
 
 type ImageProvider interface {
-	UploadImage(filePath string) (string, string, error)
-	GetImage(publicID string) (string, error)
+	UploadImage(filePath string) (string, error)
+	DownloadImage(uuid string) (*bytes.Buffer, string, error)
 }

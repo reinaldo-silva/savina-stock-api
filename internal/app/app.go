@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	api_category "github.com/reinaldo-silva/savina-stock/api/category"
+	api_image "github.com/reinaldo-silva/savina-stock/api/image"
 	api_product "github.com/reinaldo-silva/savina-stock/api/product"
 	"github.com/reinaldo-silva/savina-stock/config"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
@@ -19,6 +20,7 @@ import (
 	product_repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
 	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 	usecase_category "github.com/reinaldo-silva/savina-stock/internal/usecase/category"
+	usecase_image "github.com/reinaldo-silva/savina-stock/internal/usecase/image"
 	usecase_product "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -74,9 +76,11 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
+	imageUseCase := usecase_image.NewImageUseCase(imageService)
 
 	productHandler := api_product.NewProductHandler(productUseCase, imageService)
 	categoryHandler := api_category.NewCategoryHandler(categoryUseCase)
+	imageHandler := api_image.NewImageHandler(imageUseCase)
 
 	a.Router.Route("/products", func(r chi.Router) {
 		r.Get("/", productHandler.GetProducts)
@@ -91,6 +95,10 @@ func (a *App) Initialize(cfg *config.Config) {
 	a.Router.Route("/category", func(r chi.Router) {
 		r.Post("/", categoryHandler.CreateCategory)
 		r.Get("/", categoryHandler.GetAllCategories)
+	})
+
+	a.Router.Route("/image", func(r chi.Router) {
+		r.Get("/{uuid}", imageHandler.GetImage)
 	})
 
 }

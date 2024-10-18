@@ -2,6 +2,7 @@ package api_product
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -199,7 +200,11 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uploadedURL, publicID, err := h.imageService.Upload(tempFile.Name())
+		host := r.Host
+
+		publicID, err := h.imageService.Upload(tempFile.Name())
+		uploadedURL := fmt.Sprintf("http://%s/image/%s", host, publicID)
+
 		if err != nil {
 			appError := error.NewAppError("Failed to upload the image", http.StatusInternalServerError)
 			w.Header().Set("Content-Type", "application/json")

@@ -1,6 +1,7 @@
 package cloudinary_provider
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -23,15 +24,15 @@ func NewCloudinaryProvider(cfg config.CloudinaryConfig) (image.ImageProvider, er
 	return &CloudinaryProvider{Client: cld}, nil
 }
 
-func (cp *CloudinaryProvider) UploadImage(filePath string) (string, string, error) {
+func (cp *CloudinaryProvider) UploadImage(filePath string) (string, error) {
 	ctx := context.Background()
 
 	resp, err := cp.Client.Upload.Upload(ctx, filePath, uploader.UploadParams{})
 	if err != nil {
-		return "", "", fmt.Errorf("could not upload image: %v", err)
+		return "", fmt.Errorf("could not upload image: %v", err)
 	}
 
-	return resp.SecureURL, resp.PublicID, nil
+	return resp.PublicID, nil
 }
 
 func (cp *CloudinaryProvider) GetImage(publicID string) (string, error) {
@@ -47,4 +48,8 @@ func (cp *CloudinaryProvider) GetImage(publicID string) (string, error) {
 	}
 
 	return url, nil
+}
+
+func (sp *CloudinaryProvider) DownloadImage(uuid string) (*bytes.Buffer, string, error) {
+	return nil, "", nil
 }
