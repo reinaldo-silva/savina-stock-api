@@ -254,6 +254,12 @@ func (h *ProductHandler) GetProductImages(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	host := r.Host
+
+	for i := range images {
+		images[i].ImageURL = fmt.Sprintf("http://%s/image/%s", host, images[i].PublicID)
+	}
+
 	appResponse := response.NewAppResponse(images, "Images fetched successfully")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
