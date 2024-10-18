@@ -10,7 +10,10 @@ COPY go.mod go.sum ./
 # Instala as dependências
 RUN go mod tidy
 
-# Copia todo o conteúdo da pasta raiz para o diretório de trabalho
+# Copia o conteúdo do diretório cmd/api
+COPY cmd/api ./cmd/api
+
+# Copia o restante do conteúdo (caso precise de outras pastas)
 COPY . .
 
 # Define o diretório para compilar a aplicação a partir de cmd/api/main.go
