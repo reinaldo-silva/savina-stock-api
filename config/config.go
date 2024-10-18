@@ -22,6 +22,13 @@ type CloudinaryConfig struct {
 	APISecret string
 }
 
+type S3Config struct {
+	Region     string
+	BucketName string
+	AccessKey  string
+	SecretKey  string
+}
+
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
@@ -45,6 +52,15 @@ func LoadCloudinaryConfig() CloudinaryConfig {
 		CloudName: os.Getenv("CLOUDINARY_CLOUD_NAME"),
 		APIKey:    os.Getenv("CLOUDINARY_API_KEY"),
 		APISecret: os.Getenv("CLOUDINARY_API_SECRET"),
+	}
+}
+
+func LoadS3Config() S3Config {
+	return S3Config{
+		Region:     os.Getenv("AWS_REGION"),
+		BucketName: os.Getenv("AWS_BUCKET_NAME"),
+		AccessKey:  os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretKey:  os.Getenv("AWS_SECRET_ACCESS_KEY"),
 	}
 }
 

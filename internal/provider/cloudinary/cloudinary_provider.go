@@ -1,4 +1,4 @@
-package provider
+package cloudinary_provider
 
 import (
 	"context"

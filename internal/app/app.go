@@ -13,7 +13,7 @@ import (
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
-	provider "github.com/reinaldo-silva/savina-stock/internal/provider/cloudinary"
+	s3_provider "github.com/reinaldo-silva/savina-stock/internal/provider/aws"
 	category_repository "github.com/reinaldo-silva/savina-stock/internal/repository/category"
 	image_repository "github.com/reinaldo-silva/savina-stock/internal/repository/image"
 	product_repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
@@ -48,8 +48,15 @@ func (a *App) Initialize(cfg *config.Config) {
 		log.Fatal("failed to migrate database: ", err)
 	}
 
-	cloudinaryConfig := config.LoadCloudinaryConfig()
-	cloudinaryProvider, err := provider.NewCloudinaryProvider(cloudinaryConfig)
+	// cloudinaryConfig := config.LoadCloudinaryConfig()
+	s3Config := config.LoadS3Config()
+
+	// cloudinaryProvider, err := provider.NewCloudinaryProvider(cloudinaryConfig)
+	// if err != nil {
+	// 	log.Fatal("failed to initialize cloudinary service: ", err)
+	// }
+
+	s3Provider, err := s3_provider.NewS3Provider(s3Config)
 	if err != nil {
 		log.Fatal("failed to initialize cloudinary service: ", err)
 	}
@@ -63,7 +70,7 @@ func (a *App) Initialize(cfg *config.Config) {
 	categoryRepo := category_repository.NewCategoryRepository(a.DB)
 	imageRepo := image_repository.NewGormImageRepository(a.DB)
 
-	imageService := service.NewImageService(cloudinaryProvider)
+	imageService := service.NewImageService(s3Provider)
 
 	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
