@@ -18,6 +18,18 @@ jobs:
           echo "${{ secrets.EC2_PEM_KEY }}" > pem_file.pem
           chmod 600 pem_file.pem
 
+      - name: Set environment variables
+        run: |
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> $GITHUB_ENV
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> $GITHUB_ENV
+          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> $GITHUB_ENV
+          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> $GITHUB_ENV
+
       - name: Deploy Go app to EC2
         run: |
           ssh -i pem_file.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -33,6 +45,16 @@ jobs:
             # Build da nova imagem Docker da aplicação Go
             docker build -t go-app -f Dockerfile .
 
-            # Rodar o novo container Docker da aplicação Go
-            docker run -d -p 8080:8080 --name go-app go-app
+            # Rodar o novo container Docker da aplicação Go com variáveis de ambiente
+            docker run -d -p 8080:8080 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e DB_PORT=${DB_PORT} \
+              -e SERVER_PORT=${SERVER_PORT} \
+              -e CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME} \
+              -e CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY} \
+              -e CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET} \
+              --name go-app go-app
           EOF
