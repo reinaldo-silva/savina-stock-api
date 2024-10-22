@@ -53,3 +53,7 @@ func (cp *CloudinaryProvider) GetImage(publicID string) (string, error) {
 func (sp *CloudinaryProvider) DownloadImage(uuid string) (*bytes.Buffer, string, error) {
 	return nil, "", nil
 }
+
+func (sp *CloudinaryProvider) DeleteImage(uuid string) error {
+	return nil
+}

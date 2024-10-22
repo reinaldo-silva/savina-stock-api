@@ -85,3 +85,27 @@ func (sp *S3Provider) DownloadImage(uuid string) (*bytes.Buffer, string, error) 
 
 	return buf, *result.ContentType, nil
 }
+
+func (sp *S3Provider) DeleteImage(uuid string) error {
+	ctx := context.Background()
+
+	_, err := sp.Client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(sp.Bucket),
+		Key:    aws.String(uuid),
+	})
+
+	if err != nil {
+		return fmt.Errorf("could not delete image from S3: %v", err)
+	}
+
+	err = sp.Client.WaitUntilObjectNotExistsWithContext(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(sp.Bucket),
+		Key:    aws.String(uuid),
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to confirm deletion of image: %v", err)
+	}
+
+	return nil
+}

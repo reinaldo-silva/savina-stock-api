@@ -43,3 +43,10 @@ func (r *GormImageRepository) FindByPublicID(publicID string) (*image.ProductIma
 	}
 	return &img, nil
 }
+
+func (r *GormImageRepository) DeleteByProductID(productID uint) error {
+	if err := r.db.Where("product_id = ?", productID).Delete(&image.ProductImage{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

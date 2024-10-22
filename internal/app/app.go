@@ -74,7 +74,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	imageService := service.NewImageService(s3Provider)
 
-	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo)
+	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo, imageService)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
 	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo)
 

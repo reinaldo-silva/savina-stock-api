@@ -21,3 +21,7 @@ func (se *ImageService) Upload(filePath string) (string, error) {
 func (se *ImageService) Download(uuid string) (*bytes.Buffer, string, error) {
 	return se.provider.DownloadImage(uuid)
 }
+
+func (se *ImageService) DeleteImage(uuid string) error {
+	return se.provider.DeleteImage(uuid)
+}

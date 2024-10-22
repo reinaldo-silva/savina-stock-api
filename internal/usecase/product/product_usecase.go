@@ -7,15 +7,17 @@ import (
 
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	product "github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
 )
 
 type ProductUseCase struct {
-	repo      product.ProductRepository
-	imageRepo image.ImageRepository
+	repo         product.ProductRepository
+	imageRepo    image.ImageRepository
+	imageService *image_service.ImageService
 }
 
-func NewProductUseCase(repo product.ProductRepository, imageRepo image.ImageRepository) *ProductUseCase {
-	return &ProductUseCase{repo: repo, imageRepo: imageRepo}
+func NewProductUseCase(repo product.ProductRepository, imageRepo image.ImageRepository, imageService *image_service.ImageService) *ProductUseCase {
+	return &ProductUseCase{repo: repo, imageRepo: imageRepo, imageService: imageService}
 }
 
 func (uc *ProductUseCase) GetAll() ([]product.Product, error) {
@@ -45,10 +47,38 @@ func (uc *ProductUseCase) GetBySlug(slug string) (*product.Product, error) {
 }
 
 func (uc *ProductUseCase) Delete(slug string) error {
-	err := uc.repo.DeleteBySlug(slug)
+
+	product, err := uc.repo.FindBySlug(slug)
 	if err != nil {
 		return err
 	}
+
+	if product == nil {
+		return fmt.Errorf("produto com slug %s não encontrado", slug)
+	}
+
+	images, err := uc.imageRepo.FindByProductID(product.ID)
+	if err != nil {
+		return fmt.Errorf("erro ao buscar imagens do produto: %v", err)
+	}
+
+	for _, img := range images {
+		err := uc.imageService.DeleteImage(img.PublicID)
+		if err != nil {
+			return fmt.Errorf("erro ao deletar imagem %s do S3: %v", img.PublicID, err)
+		}
+	}
+
+	err = uc.imageRepo.DeleteByProductID(product.ID)
+	if err != nil {
+		return err
+	}
+
+	err = uc.repo.DeleteBySlug(slug)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

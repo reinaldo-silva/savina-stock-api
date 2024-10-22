@@ -28,9 +28,11 @@ type ImageRepository interface {
 	CreateManyImages(productID uint, imageURLs []UploadedImage) error
 	FindByProductID(productID uint) ([]ProductImage, error)
 	FindByPublicID(publicID string) (*ProductImage, error)
+	DeleteByProductID(productID uint) error
 }
 
 type ImageProvider interface {
 	UploadImage(filePath string) (string, error)
 	DownloadImage(uuid string) (*bytes.Buffer, string, error)
+	DeleteImage(uuid string) error
 }
