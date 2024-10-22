@@ -35,3 +35,11 @@ func (r *GormImageRepository) FindByProductID(productID uint) ([]image.ProductIm
 	}
 	return images, nil
 }
+
+func (r *GormImageRepository) FindByPublicID(publicID string) (*image.ProductImage, error) {
+	var img image.ProductImage
+	if err := r.db.Where("public_id = ?", publicID).First(&img).Error; err != nil {
+		return nil, err
+	}
+	return &img, nil
+}

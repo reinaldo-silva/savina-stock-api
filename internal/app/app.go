@@ -76,7 +76,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
-	imageUseCase := usecase_image.NewImageUseCase(imageService)
+	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo)
 
 	productHandler := api_product.NewProductHandler(productUseCase, imageService)
 	categoryHandler := api_category.NewCategoryHandler(categoryUseCase)
