@@ -24,7 +24,7 @@ func (r *GormProductRepository) GetAll(
 	var products []domain.Product
 	var total int64
 
-	query := r.db.Preload("Categories")
+	query := r.db.Preload("Images").Preload("Categories")
 
 	if nameFilter != "" {
 		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
@@ -52,7 +52,7 @@ func (r *GormProductRepository) Create(p domain.Product) error {
 
 func (r *GormProductRepository) FindBySlug(slug string) (*domain.Product, error) {
 	var product domain.Product
-	result := r.db.Where("slug = ?", slug).Preload("Categories").First(&product)
+	result := r.db.Where("slug = ?", slug).Preload("Images").Preload("Categories").First(&product)
 	if result.Error != nil {
 		return nil, result.Error
 	}
