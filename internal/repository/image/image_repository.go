@@ -1,7 +1,10 @@
 package image_repository
 
 import (
+	"fmt"
+
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	"gorm.io/gorm"
 )
 
@@ -49,4 +52,28 @@ func (r *GormImageRepository) DeleteByProductID(productID uint) error {
 		return err
 	}
 	return nil
+}
+
+func (r *GormImageRepository) DeleteImage(uuid string) error {
+	return r.db.Where("public_id = ?", uuid).Delete(&image.ProductImage{}).Error
+}
+
+func (r *GormImageRepository) ResetCover(slug string) error {
+
+	var productID uint
+	if err := r.db.Model(&product.Product{}).Where("slug = ?", slug).Select("id").Scan(&productID).Error; err != nil {
+		return fmt.Errorf("erro ao buscar produto pelo slug %s: %v", slug, err)
+	}
+
+	if productID == 0 {
+		return fmt.Errorf("produto com slug %s não encontrado", slug)
+	}
+
+	return r.db.Model(&image.ProductImage{}).
+		Where("product_id = ?", productID).
+		Update("is_cover", false).Error
+}
+
+func (r *GormImageRepository) SetImageAsCover(uuid string) error {
+	return r.db.Model(&image.ProductImage{}).Where("public_id = ?", uuid).Update("is_cover", true).Error
 }

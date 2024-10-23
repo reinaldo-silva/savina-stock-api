@@ -29,6 +29,9 @@ type ImageRepository interface {
 	FindByProductID(productID uint) ([]ProductImage, error)
 	FindByPublicID(publicID string) (*ProductImage, error)
 	DeleteByProductID(productID uint) error
+	DeleteImage(uuid string) error
+	ResetCover(slug string) error
+	SetImageAsCover(uuid string) error
 }
 
 type ImageProvider interface {

@@ -76,7 +76,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	productUseCase := usecase_product.NewProductUseCase(productRepo, categoryRepo, imageRepo, imageService)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
-	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo)
+	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo, productRepo)
 
 	productHandler := api_product.NewProductHandler(productUseCase, imageService)
 	categoryHandler := api_category.NewCategoryHandler(categoryUseCase)
@@ -91,6 +91,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Patch("/{slug}/upload-image", productHandler.UploadImages)
 		r.Get("/{slug}/images", productHandler.GetProductImages)
 		r.Patch("/{slug}/categories/link", productHandler.LinkCategories)
+		r.Patch("/{slug}/cover/{uuid}", imageHandler.SetImageAsCover)
 	})
 
 	a.Router.Route("/category", func(r chi.Router) {
@@ -103,6 +104,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	a.Router.Route("/image", func(r chi.Router) {
 		r.Get("/{uuid}", imageHandler.GetImage)
+		r.Delete("/{uuid}", imageHandler.DeleteImage)
 	})
 
 }
