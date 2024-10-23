@@ -40,7 +40,7 @@ func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	appResponse := response.NewAppResponse(createdCategory, "Category created successfully")
+	appResponse := response.NewAppResponse(createdCategory, "Category created successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(appResponse)
@@ -65,7 +65,7 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	appResponse := response.NewAppResponse(categories, "Categories fetched successfully")
+	appResponse := response.NewAppResponse(categories, "Categories fetched successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)
@@ -92,7 +92,7 @@ func (h *CategoryHandler) DeleteCategory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	appResponse := response.NewAppResponse(nil, "Category deleted successfully", http.StatusOK)
+	appResponse := response.NewAppResponse(nil, "Category deleted successfully", nil, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -119,7 +119,7 @@ func (h *CategoryHandler) GetCategoryByID(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	appResponse := response.NewAppResponse(category, "Category fetched successfully", http.StatusOK)
+	appResponse := response.NewAppResponse(category, "Category fetched successfully", nil, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -157,7 +157,7 @@ func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	appResponse := response.NewAppResponse(updatedCategory, "Category updated successfully", http.StatusOK)
+	appResponse := response.NewAppResponse(updatedCategory, "Category updated successfully", nil, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)

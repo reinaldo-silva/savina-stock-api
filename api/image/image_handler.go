@@ -50,7 +50,7 @@ func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(nil, "Imagem deletada com sucesso")
+	appResponse := response.NewAppResponse(nil, "Imagem deletada com sucesso", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)
@@ -69,7 +69,7 @@ func (h *ImageHandler) SetImageAsCover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(nil, "Imagem definida como capa com sucesso")
+	appResponse := response.NewAppResponse(nil, "Imagem definida como capa com sucesso", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)

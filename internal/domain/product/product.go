@@ -23,7 +23,11 @@ type Product struct {
 }
 
 type ProductRepository interface {
-	GetAll() ([]Product, error)
+	GetAll(
+		page int,
+		pageSize int,
+		nameFilter string,
+		categoryIDs []uint) ([]Product, int64, error)
 	Create(product Product) error
 	FindBySlug(slug string) (*Product, error)
 	DeleteBySlug(slug string) error

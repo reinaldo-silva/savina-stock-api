@@ -26,8 +26,13 @@ func NewProductUseCase(repo product.ProductRepository, categoryRepo category.Cat
 		imageService: imageService}
 }
 
-func (uc *ProductUseCase) GetAll() ([]product.Product, error) {
-	return uc.repo.GetAll()
+func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, categoryIDs []uint) ([]product.Product, int64, error) {
+	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return products, total, nil
 }
 
 func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {

@@ -16,10 +16,34 @@ func NewGormProductRepository(db *gorm.DB) *GormProductRepository {
 	return &GormProductRepository{db: db}
 }
 
-func (r *GormProductRepository) GetAll() ([]domain.Product, error) {
+func (r *GormProductRepository) GetAll(
+	page int,
+	pageSize int,
+	nameFilter string,
+	categoryIDs []uint) ([]domain.Product, int64, error) {
 	var products []domain.Product
-	result := r.db.Preload("Categories").Find(&products)
-	return products, result.Error
+	var total int64
+
+	query := r.db.Preload("Categories")
+
+	if nameFilter != "" {
+		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
+	}
+
+	if len(categoryIDs) > 0 {
+		query = query.Joins("JOIN product_categories pc ON pc.product_id = products.id").
+			Where("pc.category_id IN ?", categoryIDs)
+	}
+
+	if err := query.Model(&domain.Product{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.Order("id ASC").Offset((page - 1) * pageSize).Limit(pageSize).Find(&products).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return products, total, nil
 }
 
 func (r *GormProductRepository) Create(p domain.Product) error {

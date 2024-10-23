@@ -28,7 +28,30 @@ func NewProductHandler(uc *usecase.ProductUseCase, cs *image_service.ImageServic
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	products, err := h.useCase.GetAll()
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	nameFilter := r.URL.Query().Get("name")
+	categoryIDsStr := r.URL.Query()["category_ids"]
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	var categoryIDs []uint
+	for _, idStr := range categoryIDsStr {
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err == nil {
+			categoryIDs = append(categoryIDs, uint(id))
+		}
+	}
+
+	products, total, err := h.useCase.GetAll(page, pageSize, nameFilter, categoryIDs)
 	if err != nil {
 		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
@@ -37,9 +60,10 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(products, "Products fetched successfully")
+	appResponse := response.NewAppResponse(products, "Products fetched successfully", &total)
+
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(appResponse.StatusCode)
+	w.WriteHeader(http.StatusOK) // Resposta com status 200
 	json.NewEncoder(w).Encode(appResponse)
 }
 
@@ -72,7 +96,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(createdProduct, "Product created successfully", http.StatusCreated)
+	appResponse := response.NewAppResponse(createdProduct, "Product created successfully", nil, http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -90,7 +114,7 @@ func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	appResponse := response.NewAppResponse(product, "Product fetched successfully")
+	appResponse := response.NewAppResponse(product, "Product fetched successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -110,7 +134,7 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(nil, "Product deleted successfully")
+	appResponse := response.NewAppResponse(nil, "Product deleted successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -147,7 +171,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(updatedProduct, "Product updated successfully")
+	appResponse := response.NewAppResponse(updatedProduct, "Product updated successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -228,7 +252,7 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(uploadedImages, "Images uploaded successfully")
+	appResponse := response.NewAppResponse(uploadedImages, "Images uploaded successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -261,7 +285,7 @@ func (h *ProductHandler) GetProductImages(w http.ResponseWriter, r *http.Request
 		images[i].ImageURL = fmt.Sprintf("http://%s/image/%s", host, images[i].PublicID)
 	}
 
-	appResponse := response.NewAppResponse(images, "Images fetched successfully")
+	appResponse := response.NewAppResponse(images, "Images fetched successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
@@ -281,7 +305,7 @@ func (h *ProductHandler) LinkCategories(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		appResponse := response.NewAppResponse(nil, "All product categories removed successfully", http.StatusOK)
+		appResponse := response.NewAppResponse(nil, "All product categories removed successfully", nil, http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(appResponse.StatusCode)
 		json.NewEncoder(w).Encode(appResponse)
@@ -317,7 +341,7 @@ func (h *ProductHandler) LinkCategories(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	appResponse := response.NewAppResponse(nil, "Product categories linked successfully", http.StatusOK)
+	appResponse := response.NewAppResponse(nil, "Product categories linked successfully", nil, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
