@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
@@ -45,7 +47,6 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct product.Product
 
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
-
 	if err != nil {
 		appError := error.NewAppError("Invalid input data")
 		w.Header().Set("Content-Type", "application/json")
@@ -261,6 +262,62 @@ func (h *ProductHandler) GetProductImages(w http.ResponseWriter, r *http.Request
 	}
 
 	appResponse := response.NewAppResponse(images, "Images fetched successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) LinkCategories(w http.ResponseWriter, r *http.Request) {
+	categories := r.URL.Query().Get("ids")
+	slug := chi.URLParam(r, "slug")
+
+	if categories == "" {
+		err := h.useCase.UpdateProductCategories(slug, []int{})
+		if err != nil {
+			appError := error.NewAppError(err.Error())
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+
+		appResponse := response.NewAppResponse(nil, "All product categories removed successfully", http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appResponse.StatusCode)
+		json.NewEncoder(w).Encode(appResponse)
+		return
+	}
+
+	stringArray := strings.Split(categories, ",")
+	var intArray []int
+	uniqueIDs := make(map[int]bool)
+
+	for _, s := range stringArray {
+		num, err := strconv.Atoi(s)
+		if err != nil {
+			appError := error.NewAppError("Invalid category ID format")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(appError)
+			return
+		}
+
+		if !uniqueIDs[num] {
+			intArray = append(intArray, num)
+			uniqueIDs[num] = true
+		}
+	}
+
+	err := h.useCase.UpdateProductCategories(slug, intArray)
+	if err != nil {
+		appError := error.NewAppError(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(nil, "Product categories linked successfully", http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)

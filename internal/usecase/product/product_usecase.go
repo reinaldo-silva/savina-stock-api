@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	category "github.com/reinaldo-silva/savina-stock/internal/domain/category"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	product "github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
@@ -12,12 +13,17 @@ import (
 
 type ProductUseCase struct {
 	repo         product.ProductRepository
+	categoryRepo category.CategoryRepository
 	imageRepo    image.ImageRepository
 	imageService *image_service.ImageService
 }
 
-func NewProductUseCase(repo product.ProductRepository, imageRepo image.ImageRepository, imageService *image_service.ImageService) *ProductUseCase {
-	return &ProductUseCase{repo: repo, imageRepo: imageRepo, imageService: imageService}
+func NewProductUseCase(repo product.ProductRepository, categoryRepo category.CategoryRepository, imageRepo image.ImageRepository, imageService *image_service.ImageService) *ProductUseCase {
+	return &ProductUseCase{
+		repo:         repo,
+		categoryRepo: categoryRepo,
+		imageRepo:    imageRepo,
+		imageService: imageService}
 }
 
 func (uc *ProductUseCase) GetAll() ([]product.Product, error) {
@@ -33,6 +39,18 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 	if strings.TrimSpace(p.Name) == "" {
 		return nil, errors.New("product name cannot be empty")
 	}
+	var categories []category.Category
+
+	for _, category := range p.Categories {
+		foundCategory, err := uc.categoryRepo.FindById(category.ID)
+		if err != nil {
+			return nil, fmt.Errorf("category with ID %d does not exist", category.ID)
+		}
+
+		categories = append(categories, *foundCategory)
+	}
+
+	p.Categories = categories
 
 	err := uc.repo.Create(p)
 	if err != nil {
@@ -115,4 +133,38 @@ func (uc *ProductUseCase) GetProductImages(productID uint) ([]image.ProductImage
 		return nil, err
 	}
 	return images, nil
+}
+
+func (uc *ProductUseCase) UpdateProductCategories(slug string, categoryIDs []int) error {
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return fmt.Errorf("product with slug %s not found", slug)
+	}
+
+	if product == nil {
+		return fmt.Errorf("product with slug %s not found", slug)
+	}
+
+	var categories []category.Category
+	for _, categoryID := range categoryIDs {
+		foundCategory, err := uc.categoryRepo.FindById(uint(categoryID))
+		if err != nil {
+			return fmt.Errorf("category with ID %d does not exist", categoryID)
+		}
+		categories = append(categories, *foundCategory)
+	}
+
+	err = uc.repo.ClearProductCategories(product.ID)
+	if err != nil {
+		return fmt.Errorf("failed to clear product categories: %v", err)
+	}
+
+	product.Categories = categories
+
+	err = uc.repo.UpdateProductCategories(product)
+	if err != nil {
+		return fmt.Errorf("failed to update product categories: %v", err)
+	}
+
+	return nil
 }

@@ -18,7 +18,7 @@ func NewGormProductRepository(db *gorm.DB) *GormProductRepository {
 
 func (r *GormProductRepository) GetAll() ([]domain.Product, error) {
 	var products []domain.Product
-	result := r.db.Find(&products)
+	result := r.db.Preload("Categories").Find(&products)
 	return products, result.Error
 }
 
@@ -28,7 +28,7 @@ func (r *GormProductRepository) Create(p domain.Product) error {
 
 func (r *GormProductRepository) FindBySlug(slug string) (*domain.Product, error) {
 	var product domain.Product
-	result := r.db.Where("slug = ?", slug).First(&product)
+	result := r.db.Where("slug = ?", slug).Preload("Categories").First(&product)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -62,4 +62,12 @@ func (r *GormProductRepository) UpdateBySlug(slug string, updatedProduct domain.
 	}
 
 	return existingProduct, nil
+}
+
+func (r *GormProductRepository) ClearProductCategories(productID uint) error {
+	return r.db.Model(&domain.Product{ID: productID}).Association("Categories").Clear()
+}
+
+func (r *GormProductRepository) UpdateProductCategories(product *domain.Product) error {
+	return r.db.Model(product).Association("Categories").Replace(product.Categories)
 }

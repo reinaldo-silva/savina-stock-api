@@ -74,7 +74,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	imageService := service.NewImageService(s3Provider)
 
-	productUseCase := usecase_product.NewProductUseCase(productRepo, imageRepo, imageService)
+	productUseCase := usecase_product.NewProductUseCase(productRepo, categoryRepo, imageRepo, imageService)
 	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
 	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo)
 
@@ -90,6 +90,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Put("/{slug}", productHandler.UpdateProduct)
 		r.Patch("/{slug}/upload-image", productHandler.UploadImages)
 		r.Get("/{slug}/images", productHandler.GetProductImages)
+		r.Patch("/{slug}/categories/link", productHandler.LinkCategories)
 	})
 
 	a.Router.Route("/category", func(r chi.Router) {

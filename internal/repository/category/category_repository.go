@@ -1,6 +1,8 @@
 package category_repository
 
 import (
+	"fmt"
+
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
 	"gorm.io/gorm"
 )
@@ -26,4 +28,15 @@ func (repo *CategoryRepositoryImpl) GetAll() ([]category.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func (r *CategoryRepositoryImpl) FindById(id uint) (*category.Category, error) {
+	var category category.Category
+	if err := r.db.First(&category, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("category not found")
+		}
+		return nil, err
+	}
+	return &category, nil
 }
