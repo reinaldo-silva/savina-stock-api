@@ -12,5 +12,8 @@ type Category struct {
 type CategoryRepository interface {
 	Create(category *Category) error
 	GetAll() ([]Category, error)
-	FindById(categoryID uint) (*Category, error)
+	Delete(id uint) error
+	Update(category *Category) error
+	GetByID(id uint) (*Category, error)
+	HasProducts(id uint) (bool, error)
 }

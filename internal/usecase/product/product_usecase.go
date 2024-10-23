@@ -42,7 +42,7 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 	var categories []category.Category
 
 	for _, category := range p.Categories {
-		foundCategory, err := uc.categoryRepo.FindById(category.ID)
+		foundCategory, err := uc.categoryRepo.GetByID(category.ID)
 		if err != nil {
 			return nil, fmt.Errorf("category with ID %d does not exist", category.ID)
 		}
@@ -147,7 +147,7 @@ func (uc *ProductUseCase) UpdateProductCategories(slug string, categoryIDs []int
 
 	var categories []category.Category
 	for _, categoryID := range categoryIDs {
-		foundCategory, err := uc.categoryRepo.FindById(uint(categoryID))
+		foundCategory, err := uc.categoryRepo.GetByID(uint(categoryID))
 		if err != nil {
 			return fmt.Errorf("category with ID %d does not exist", categoryID)
 		}

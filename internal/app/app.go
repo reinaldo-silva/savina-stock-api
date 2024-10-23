@@ -96,6 +96,9 @@ func (a *App) Initialize(cfg *config.Config) {
 	a.Router.Route("/category", func(r chi.Router) {
 		r.Post("/", categoryHandler.CreateCategory)
 		r.Get("/", categoryHandler.GetAllCategories)
+		r.Get("/{id}", categoryHandler.GetCategoryByID)
+		r.Delete("/{id}", categoryHandler.DeleteCategory)
+		r.Put("/{id}", categoryHandler.UpdateCategory)
 	})
 
 	a.Router.Route("/image", func(r chi.Router) {
