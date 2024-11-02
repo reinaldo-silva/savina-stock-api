@@ -21,10 +21,11 @@ func (repo *CategoryRepositoryImpl) Create(category *category.Category) error {
 
 func (repo *CategoryRepositoryImpl) GetAll() ([]category.Category, error) {
 	var categories []category.Category
-	err := repo.db.Find(&categories).Error
+	err := repo.db.Order("id ASC").Find(&categories).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return categories, nil
 }
 

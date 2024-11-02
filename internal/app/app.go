@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	api_category "github.com/reinaldo-silva/savina-stock/api/category"
 	api_image "github.com/reinaldo-silva/savina-stock/api/image"
 	api_product "github.com/reinaldo-silva/savina-stock/api/product"
@@ -65,6 +66,14 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	a.Router = chi.NewRouter()
 
+	a.Router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 	a.Router.Use(middleware.Logger)
 	a.Router.Use(middleware.Recoverer)
 

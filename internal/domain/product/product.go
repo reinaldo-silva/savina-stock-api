@@ -30,7 +30,7 @@ type ProductRepository interface {
 		categoryIDs []uint) ([]Product, int64, error)
 	Create(product Product) error
 	FindBySlug(slug string) (*Product, error)
-	DeleteBySlug(slug string) error
+	DeleteBySlug(productID uint) error
 	UpdateBySlug(slug string, updatedProduct Product) (Product, error)
 	ClearProductCategories(productID uint) error
 	UpdateProductCategories(product *Product) error

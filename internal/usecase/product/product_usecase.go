@@ -97,7 +97,7 @@ func (uc *ProductUseCase) Delete(slug string) error {
 		return err
 	}
 
-	err = uc.repo.DeleteBySlug(slug)
+	err = uc.repo.DeleteBySlug(product.ID)
 	if err != nil {
 		return err
 	}

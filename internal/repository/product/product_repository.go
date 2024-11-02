@@ -59,29 +59,66 @@ func (r *GormProductRepository) FindBySlug(slug string) (*domain.Product, error)
 	return &product, nil
 }
 
-func (r *GormProductRepository) DeleteBySlug(slug string) error {
-	result := r.db.Where("slug = ?", slug).Delete(&domain.Product{})
-	if result.RowsAffected == 0 {
-		return errors.New("product not found")
-	}
-	return result.Error
+func (r *GormProductRepository) DeleteBySlug(productID uint) error {
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+
+		var product domain.Product
+		if err := tx.Preload("Categories").First(&product, productID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("produto não encontrado")
+			}
+			return err
+		}
+
+		if err := tx.Model(&product).Association("Categories").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Unscoped().Delete(&product).Error; err != nil {
+			return err
+		}
+
+		return nil
+
+	})
+
+	return err
 }
 
 func (r *GormProductRepository) UpdateBySlug(slug string, updatedProduct domain.Product) (domain.Product, error) {
 	var existingProduct domain.Product
 
-	if err := r.db.Where("slug = ?", slug).First(&existingProduct).Error; err != nil {
-		return existingProduct, err
-	}
+	err := r.db.Transaction(func(tx *gorm.DB) error {
 
-	existingProduct.Name = updatedProduct.Name
-	existingProduct.Description = updatedProduct.Description
-	existingProduct.Price = updatedProduct.Price
-	existingProduct.Cost = updatedProduct.Cost
-	existingProduct.Stock = updatedProduct.Stock
-	existingProduct.UpdatedAt = time.Now()
+		if err := tx.Preload("Categories").Where("slug = ?", slug).First(&existingProduct).Error; err != nil {
+			return err
+		}
 
-	if err := r.db.Save(&existingProduct).Error; err != nil {
+		existingProduct.Name = updatedProduct.Name
+		existingProduct.Description = updatedProduct.Description
+		existingProduct.Price = updatedProduct.Price
+		existingProduct.Cost = updatedProduct.Cost
+		existingProduct.Stock = updatedProduct.Stock
+		existingProduct.UpdatedAt = time.Now()
+
+		if err := tx.Model(&existingProduct).Association("Categories").Clear(); err != nil {
+			return err
+		}
+		if len(updatedProduct.Categories) > 0 {
+			if err := tx.Model(&existingProduct).Association("Categories").Append(updatedProduct.Categories); err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Save(&existingProduct).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return existingProduct, err
 	}
 
