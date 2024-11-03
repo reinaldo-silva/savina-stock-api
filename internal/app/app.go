@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -66,10 +67,19 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	a.Router = chi.NewRouter()
 
+	isProduction := os.Getenv("ENVIRONMENT") == "production"
+
+	var allowedOrigins []string
+	if isProduction {
+		allowedOrigins = []string{os.Getenv("HOST_WEB"), fmt.Sprintf("www.%s", os.Getenv("HOST_WEB"))}
+	} else {
+		allowedOrigins = []string{"http://localhost:3000"}
+	}
+
 	a.Router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
