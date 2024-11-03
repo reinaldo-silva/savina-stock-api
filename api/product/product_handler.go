@@ -60,6 +60,13 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	host := r.Host
+	for i := range products {
+		for j := range products[i].Images {
+			products[i].Images[j].ImageURL = fmt.Sprintf("http://%s/image/%s", host, products[i].Images[j].PublicID)
+		}
+	}
+
 	appResponse := response.NewAppResponse(products, "Products fetched successfully", &total)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -112,6 +119,12 @@ func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request
 		w.WriteHeader(appError.StatusCode)
 		json.NewEncoder(w).Encode(appError)
 		return
+	}
+
+	host := r.Host
+
+	for i := range product.Images {
+		product.Images[i].ImageURL = fmt.Sprintf("http://%s/image/%s", host, product.Images[i].PublicID)
 	}
 
 	appResponse := response.NewAppResponse(product, "Product fetched successfully", nil)
