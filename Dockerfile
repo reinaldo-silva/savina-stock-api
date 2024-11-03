@@ -20,6 +20,9 @@ FROM alpine:latest
 # Define o diretório de trabalho
 WORKDIR /app
 
+# Define a variável de ambiente para o ambiente de produção
+ENV ENVIRONMENT=production
+
 # Copia o executável da etapa de build
 COPY --from=builder /app/myapp .
 
