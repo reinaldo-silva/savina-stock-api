@@ -77,12 +77,12 @@ func (a *App) Initialize(cfg *config.Config) {
 	}
 
 	a.Router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
+		AllowedOrigins: allowedOrigins,
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
+		ExposedHeaders: []string{"Link"},
+		MaxAge:         300,
+		// AllowCredentials: true,
 	}))
 	a.Router.Use(middleware.Logger)
 	a.Router.Use(middleware.Recoverer)
