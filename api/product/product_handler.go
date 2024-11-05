@@ -2,7 +2,6 @@ package api_product
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
 	"github.com/reinaldo-silva/savina-stock/package/response/error"
 	"github.com/reinaldo-silva/savina-stock/package/response/response"
+	"github.com/reinaldo-silva/savina-stock/utils"
 )
 
 type ProductHandler struct {
@@ -63,7 +63,7 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
 	for i := range products {
 		for j := range products[i].Images {
-			products[i].Images[j].ImageURL = fmt.Sprintf("http://%s/image/%s", host, products[i].Images[j].PublicID)
+			products[i].Images[j].ImageURL = utils.GenerateImageURL(host, products[i].Images[j].PublicID)
 		}
 	}
 
@@ -124,7 +124,7 @@ func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request
 	host := r.Host
 
 	for i := range product.Images {
-		product.Images[i].ImageURL = fmt.Sprintf("http://%s/image/%s", host, product.Images[i].PublicID)
+		product.Images[i].ImageURL = utils.GenerateImageURL(host, product.Images[i].PublicID)
 	}
 
 	appResponse := response.NewAppResponse(product, "Product fetched successfully", nil)
@@ -241,7 +241,7 @@ func (h *ProductHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 		host := r.Host
 
 		publicID, err := h.imageService.Upload(tempFile.Name())
-		uploadedURL := fmt.Sprintf("http://%s/image/%s", host, publicID)
+		uploadedURL := utils.GenerateImageURL(host, publicID)
 
 		if err != nil {
 			appError := error.NewAppError("Failed to upload the image", http.StatusInternalServerError)
@@ -295,7 +295,7 @@ func (h *ProductHandler) GetProductImages(w http.ResponseWriter, r *http.Request
 	host := r.Host
 
 	for i := range images {
-		images[i].ImageURL = fmt.Sprintf("http://%s/image/%s", host, images[i].PublicID)
+		images[i].ImageURL = utils.GenerateImageURL(host, images[i].PublicID)
 	}
 
 	appResponse := response.NewAppResponse(images, "Images fetched successfully", nil)
