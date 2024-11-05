@@ -125,6 +125,10 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Delete("/{uuid}", imageHandler.DeleteImage)
 	})
 
+	a.Router.Options("/*", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+
 }
 
 func (a *App) Run(cfg *config.Config) {
