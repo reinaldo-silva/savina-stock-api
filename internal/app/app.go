@@ -71,7 +71,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	var allowedOrigins []string
 	if isProduction {
-		allowedOrigins = []string{os.Getenv("HOST_WEB"), fmt.Sprintf("www.%s", os.Getenv("HOST_WEB"))}
+		allowedOrigins = []string{fmt.Sprintf("https://%s", os.Getenv("HOST_WEB")), fmt.Sprintf("https://www.%s", os.Getenv("HOST_WEB"))}
 	} else {
 		allowedOrigins = []string{"http://localhost:3000"}
 	}
