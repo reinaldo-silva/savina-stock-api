@@ -34,7 +34,7 @@ jobs:
             docker build -t go-app -f Dockerfile .
 
             # Rodar o novo container Docker da aplicação Go com variáveis de ambiente
-            docker run -d --restart always -p 8080:8080 myapp \
+            docker run -d --restart always -p 8080:8080 \
               -e DB_HOST="${{ secrets.DB_HOST }}" \
               -e DB_USER="${{ secrets.DB_USER }}" \
               -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
