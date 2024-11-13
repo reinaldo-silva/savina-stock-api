@@ -30,6 +30,11 @@ func (r *GormProductRepository) GetAll(
 		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
 	}
 
+	// Filtra apenas produtos disponíveis se onlyAvailable for true
+	// if onlyAvailable {
+	query = query.Where("available = ?", true)
+	// }
+
 	if len(categoryIDs) > 0 {
 		query = query.Joins("JOIN product_categories pc ON pc.product_id = products.id").
 			Where("pc.category_id IN ?", categoryIDs)

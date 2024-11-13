@@ -16,6 +16,7 @@ type Product struct {
 	Price       float64                   `gorm:"type:decimal(10,2);not null" json:"price"`
 	Cost        float64                   `gorm:"type:decimal(10,2);" json:"cost"`
 	Stock       int                       `gorm:"not null" json:"stock"`
+	Available   bool                      `gorm:"not null;default:false" json:"available"`
 	Images      []image.ProductImage      `gorm:"foreignKey:ProductID" json:"images"`
 	Categories  []category_model.Category `gorm:"many2many:product_categories;" json:"categories"`
 	CreatedAt   time.Time                 `gorm:"autoCreateTime" json:"created_at"`
