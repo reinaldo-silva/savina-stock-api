@@ -3,9 +3,7 @@ package api_auth
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/user"
 	usecase "github.com/reinaldo-silva/savina-stock/internal/usecase/user"
 	error_response "github.com/reinaldo-silva/savina-stock/package/response/error"
@@ -14,13 +12,11 @@ import (
 )
 
 type AuthHandler struct {
-	useCase   *usecase.UserUseCase
-	jwtSecret []byte
+	useCase *usecase.UserUseCase
 }
 
-func NewAuthHandler(uc *usecase.UserUseCase, jwtSecret []byte) *AuthHandler {
-	return &AuthHandler{useCase: uc,
-		jwtSecret: jwtSecret}
+func NewAuthHandler(uc *usecase.UserUseCase) *AuthHandler {
+	return &AuthHandler{useCase: uc}
 }
 
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -85,43 +81,18 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingUser, err := h.useCase.GetByEmail(loginData.Email)
+	user, token, err := h.useCase.SignInUseCase(loginData.Email, loginData.Password)
 	if err != nil {
-		appError := error_response.NewAppError("Invalid email or password", http.StatusUnauthorized)
-		h.sendErrorResponse(w, appError)
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(loginData.Password))
-	if err != nil {
-		appError := error_response.NewAppError("Invalid email or password", http.StatusUnauthorized)
-		h.sendErrorResponse(w, appError)
-		return
-	}
-
-	token, err := h.generateJWT(existingUser)
-	if err != nil {
-		appError := error_response.NewAppError("Error generating token", http.StatusInternalServerError)
+		appError := error_response.NewAppError(err.Error(), http.StatusUnauthorized)
 		h.sendErrorResponse(w, appError)
 		return
 	}
 
 	appResponse := response.NewAppResponse(map[string]interface{}{
-		"user":  existingUser,
+		"user":  user,
 		"token": token,
 	}, "User signed in successfully", nil)
 	h.sendSuccessResponse(w, appResponse)
-}
-
-func (h *AuthHandler) generateJWT(user *user.User) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(h.jwtSecret)
 }
 
 func (h *AuthHandler) sendErrorResponse(w http.ResponseWriter, appError error_response.AppError) {

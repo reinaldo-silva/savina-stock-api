@@ -15,13 +15,16 @@ type JwtMiddleware struct {
 	secretKey []byte
 }
 
+type contextKey string
+
+const (
+	userIDKey   contextKey = "userID"
+	userRoleKey contextKey = "userRole"
+)
+
 func NewJwtMiddleware(secretKey []byte) *JwtMiddleware {
 	return &JwtMiddleware{secretKey: secretKey}
 }
-
-type contextKey string
-
-const userContextKey = contextKey("user")
 
 func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +47,6 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
@@ -60,8 +62,18 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			ctx := context.WithValue(r.Context(), userContextKey, claims)
+			userID, _ := claims["user_id"].(float64)
+			role, _ := claims["role"].(string)
+
+			ctx := context.WithValue(r.Context(), userIDKey, uint(userID))
+			ctx = context.WithValue(ctx, userRoleKey, role)
 			r = r.WithContext(ctx)
+		} else {
+			appError := error_response.NewAppError("Could not parse token claims", http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+			return
 		}
 
 		next.ServeHTTP(w, r)
