@@ -26,16 +26,21 @@ func NewProductUseCase(repo product.ProductRepository, categoryRepo category.Cat
 		imageService: imageService}
 }
 
-func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, categoryIDs []uint) ([]product.Product, int64, error) {
+func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, categoryIDs []uint) ([]product.ProductResponse, int64, error) {
 	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return products, total, nil
+	var productResponses []product.ProductResponse
+	for _, p := range products {
+		productResponses = append(productResponses, *p.ToResponse())
+	}
+
+	return productResponses, total, nil
 }
 
-func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
+func (uc *ProductUseCase) Create(p product.Product) (*product.ProductResponse, error) {
 
 	if strings.TrimSpace(p.Slug) == "" {
 		p.Slug = product.GenerateSlug()
@@ -44,14 +49,13 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 	if strings.TrimSpace(p.Name) == "" {
 		return nil, errors.New("product name cannot be empty")
 	}
-	var categories []category.Category
 
+	var categories []category.Category
 	for _, category := range p.Categories {
 		foundCategory, err := uc.categoryRepo.GetByID(category.ID)
 		if err != nil {
 			return nil, fmt.Errorf("category with ID %d does not exist", category.ID)
 		}
-
 		categories = append(categories, *foundCategory)
 	}
 
@@ -62,11 +66,16 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 		return nil, err
 	}
 
-	return &p, nil
+	return p.ToResponse(), nil
 }
 
-func (uc *ProductUseCase) GetBySlug(slug string) (*product.Product, error) {
-	return uc.repo.FindBySlug(slug)
+func (uc *ProductUseCase) GetBySlug(slug string) (*product.ProductResponse, error) {
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+
+	return product.ToResponse(), nil
 }
 
 func (uc *ProductUseCase) Delete(slug string) error {
@@ -105,13 +114,13 @@ func (uc *ProductUseCase) Delete(slug string) error {
 	return nil
 }
 
-func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (product.Product, error) {
-
+func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (*product.ProductResponse, error) {
 	product, err := uc.repo.UpdateBySlug(slug, updatedProduct)
 	if err != nil {
-		return product, err
+		return product.ToResponse(), err
 	}
-	return product, nil
+
+	return product.ToResponse(), nil
 }
 
 func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []image.UploadedImage) error {

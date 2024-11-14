@@ -42,3 +42,27 @@ func GenerateSlug() string {
 	id := ksuid.New().String()
 	return id[:8]
 }
+
+type ProductResponse struct {
+	ID          uint                      `json:"id"`
+	Name        string                    `json:"name"`
+	Slug        string                    `json:"slug"`
+	Description string                    `json:"description"`
+	Price       float64                   `json:"price"`
+	Stock       int                       `json:"stock"`
+	Images      []image.ProductImage      `json:"images"`
+	Categories  []category_model.Category `json:"categories"`
+}
+
+func (p *Product) ToResponse() *ProductResponse {
+	return &ProductResponse{
+		ID:          p.ID,
+		Name:        p.Name,
+		Slug:        p.Slug,
+		Description: p.Description,
+		Price:       p.Price,
+		Stock:       p.Stock,
+		Images:      p.Images,
+		Categories:  p.Categories,
+	}
+}

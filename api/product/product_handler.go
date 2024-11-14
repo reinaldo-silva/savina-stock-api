@@ -175,7 +175,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedProduct, err = h.useCase.Update(slug, updatedProduct)
+	updatedProductRes, err := h.useCase.Update(slug, updatedProduct)
 	if err != nil {
 		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
@@ -184,7 +184,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appResponse := response.NewAppResponse(updatedProduct, "Product updated successfully", nil)
+	appResponse := response.NewAppResponse(updatedProductRes, "Product updated successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
 	json.NewEncoder(w).Encode(appResponse)
