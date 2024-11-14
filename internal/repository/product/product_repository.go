@@ -20,7 +20,8 @@ func (r *GormProductRepository) GetAll(
 	page int,
 	pageSize int,
 	nameFilter string,
-	categoryIDs []uint) ([]domain.Product, int64, error) {
+	categoryIDs []uint,
+	onlyAvailable bool) ([]domain.Product, int64, error) {
 	var products []domain.Product
 	var total int64
 
@@ -30,10 +31,9 @@ func (r *GormProductRepository) GetAll(
 		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
 	}
 
-	// Filtra apenas produtos disponíveis se onlyAvailable for true
-	// if onlyAvailable {
-	query = query.Where("available = ?", true)
-	// }
+	if onlyAvailable {
+		query = query.Where("available = ?", true)
+	}
 
 	if len(categoryIDs) > 0 {
 		query = query.Joins("JOIN product_categories pc ON pc.product_id = products.id").

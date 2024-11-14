@@ -28,7 +28,8 @@ type ProductRepository interface {
 		page int,
 		pageSize int,
 		nameFilter string,
-		categoryIDs []uint) ([]Product, int64, error)
+		categoryIDs []uint,
+		onlyAvailable bool) ([]Product, int64, error)
 	Create(product Product) error
 	FindBySlug(slug string) (*Product, error)
 	DeleteBySlug(productID uint) error

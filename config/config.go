@@ -14,6 +14,7 @@ type Config struct {
 	DBName     string
 	DBPort     string
 	ServerPort string
+	JwtSecret  string
 }
 
 type CloudinaryConfig struct {
@@ -42,6 +43,7 @@ func LoadConfig() *Config {
 		DBName:     getEnv("DB_NAME", "stock_db"),
 		DBPort:     getEnv("DB_PORT", "5432"),
 		ServerPort: getEnv("SERVER_PORT", "8080"),
+		JwtSecret:  getEnv("JWT_SECRET", "12345"),
 	}
 
 	return config

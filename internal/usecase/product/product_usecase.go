@@ -27,7 +27,7 @@ func NewProductUseCase(repo product.ProductRepository, categoryRepo category.Cat
 }
 
 func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, categoryIDs []uint) ([]product.Product, int64, error) {
-	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs)
+	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
 	if err != nil {
 		return nil, 0, err
 	}
