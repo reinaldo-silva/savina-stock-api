@@ -127,7 +127,7 @@ func (a *App) Initialize(cfg *config.Config) {
 			r.Use(jwtMiddleware.ValidateToken)
 			r.Use(jwtMiddleware.RequireRoles(string(user.AdminRole)))
 			r.Get("/to-admin", productHandler.GetProductsToAdmin)
-			r.Get("/{slug}/to-admin", productHandler.GetProductBySlugToAdmin)
+			r.Get("/to-admin/{slug}", productHandler.GetProductBySlugToAdmin)
 			r.Post("/", productHandler.CreateProduct)
 			r.Delete("/{slug}", productHandler.DeleteProduct)
 			r.Put("/{slug}", productHandler.UpdateProduct)
