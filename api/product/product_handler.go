@@ -51,7 +51,7 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	products, total, err := h.useCase.GetAll(page, pageSize, nameFilter, categoryIDs)
+	products, total, err := h.useCase.GetAll(page, pageSize, nameFilter, categoryIDs, r.Host)
 	if err != nil {
 		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
@@ -60,17 +60,50 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	host := r.Host
-	for i := range products {
-		for j := range products[i].Images {
-			products[i].Images[j].ImageURL = utils.GenerateImageURL(host, products[i].Images[j].PublicID)
+	appResponse := response.NewAppResponse(products, "Products fetched successfully", &total)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) GetProductsToAdmin(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	nameFilter := r.URL.Query().Get("name")
+	categoryIDsStr := r.URL.Query()["category_ids"]
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	var categoryIDs []uint
+	for _, idStr := range categoryIDsStr {
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err == nil {
+			categoryIDs = append(categoryIDs, uint(id))
 		}
+	}
+
+	products, total, err := h.useCase.GetAllToAdmin(page, pageSize, nameFilter, categoryIDs, r.Host)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
 	}
 
 	appResponse := response.NewAppResponse(products, "Products fetched successfully", &total)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // Resposta com status 200
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)
 }
 
@@ -113,6 +146,30 @@ func (h *ProductHandler) GetProductBySlug(w http.ResponseWriter, r *http.Request
 	slug := chi.URLParam(r, "slug")
 
 	product, err := h.useCase.GetBySlug(slug)
+	if err != nil {
+		appError := error.NewAppError("Product not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	host := r.Host
+
+	for i := range product.Images {
+		product.Images[i].ImageURL = utils.GenerateImageURL(host, product.Images[i].PublicID)
+	}
+
+	appResponse := response.NewAppResponse(product, "Product fetched successfully", nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) GetProductBySlugToAdmin(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	product, err := h.useCase.GetBySlugToAdmin(slug)
 	if err != nil {
 		appError := error.NewAppError("Product not found", http.StatusNotFound)
 		w.Header().Set("Content-Type", "application/json")

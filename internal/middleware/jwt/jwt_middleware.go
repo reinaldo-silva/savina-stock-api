@@ -15,6 +15,12 @@ type JwtMiddleware struct {
 	secretKey []byte
 }
 
+type Claims struct {
+	UserID uint   `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
 type contextKey string
 
 const (
@@ -46,7 +52,7 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
@@ -61,11 +67,12 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			userID, _ := claims["user_id"].(float64)
-			role, _ := claims["role"].(string)
+		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 
-			ctx := context.WithValue(r.Context(), userIDKey, uint(userID))
+			userID := claims.UserID
+			role := claims.Role
+
+			ctx := context.WithValue(r.Context(), userIDKey, userID)
 			ctx = context.WithValue(ctx, userRoleKey, role)
 			r = r.WithContext(ctx)
 		} else {
@@ -78,4 +85,33 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (m *JwtMiddleware) RequireRoles(allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			role, ok := r.Context().Value(userRoleKey).(string)
+
+			if !ok {
+				appError := error_response.NewAppError("Role not found in context", http.StatusForbidden)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(appError.StatusCode)
+				json.NewEncoder(w).Encode(appError)
+				return
+			}
+
+			for _, allowedRole := range allowedRoles {
+				if role == allowedRole {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			appError := error_response.NewAppError("Access denied: insufficient permissions", http.StatusForbidden)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(appError.StatusCode)
+			json.NewEncoder(w).Encode(appError)
+		})
+	}
 }

@@ -109,6 +109,7 @@ func (a *App) Initialize(cfg *config.Config) {
 
 	a.Router.Route("/users", func(r chi.Router) {
 		r.Use(jwtMiddleware.ValidateToken)
+		r.Use(jwtMiddleware.RequireRoles(string(user.AdminRole)))
 		r.Get("/", userHandler.GetUsers)
 		r.Post("/", userHandler.CreateUser)
 	})
@@ -124,6 +125,9 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Get("/{slug}/images", productHandler.GetProductImages)
 		r.Group(func(r chi.Router) {
 			r.Use(jwtMiddleware.ValidateToken)
+			r.Use(jwtMiddleware.RequireRoles(string(user.AdminRole)))
+			r.Get("/to-admin", productHandler.GetProductsToAdmin)
+			r.Get("/{slug}/to-admin", productHandler.GetProductBySlugToAdmin)
 			r.Post("/", productHandler.CreateProduct)
 			r.Delete("/{slug}", productHandler.DeleteProduct)
 			r.Put("/{slug}", productHandler.UpdateProduct)
@@ -139,6 +143,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Get("/{id}", categoryHandler.GetCategoryByID)
 		r.Group(func(r chi.Router) {
 			r.Use(jwtMiddleware.ValidateToken)
+			r.Use(jwtMiddleware.RequireRoles(string(user.AdminRole)))
 			r.Post("/", categoryHandler.CreateCategory)
 			r.Delete("/{id}", categoryHandler.DeleteCategory)
 			r.Put("/{id}", categoryHandler.UpdateCategory)
@@ -149,6 +154,7 @@ func (a *App) Initialize(cfg *config.Config) {
 		r.Get("/{uuid}", imageHandler.GetImage)
 		r.Group(func(r chi.Router) {
 			r.Use(jwtMiddleware.ValidateToken)
+			r.Use(jwtMiddleware.RequireRoles(string(user.AdminRole)))
 			r.Delete("/{uuid}", imageHandler.DeleteImage)
 		})
 	})

@@ -9,6 +9,7 @@ import (
 	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
 	product "github.com/reinaldo-silva/savina-stock/internal/domain/product"
 	image_service "github.com/reinaldo-silva/savina-stock/internal/service/image"
+	"github.com/reinaldo-silva/savina-stock/utils"
 )
 
 type ProductUseCase struct {
@@ -26,10 +27,20 @@ func NewProductUseCase(repo product.ProductRepository, categoryRepo category.Cat
 		imageService: imageService}
 }
 
-func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, categoryIDs []uint) ([]product.ProductResponse, int64, error) {
+func (uc *ProductUseCase) GetAll(page int,
+	pageSize int,
+	nameFilter string,
+	categoryIDs []uint,
+	host string) ([]product.ProductResponse, int64, error) {
 	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
 	if err != nil {
 		return nil, 0, err
+	}
+
+	for i := range products {
+		for j := range products[i].Images {
+			products[i].Images[j].ImageURL = utils.GenerateImageURL(host, products[i].Images[j].PublicID)
+		}
 	}
 
 	var productResponses []product.ProductResponse
@@ -40,7 +51,26 @@ func (uc *ProductUseCase) GetAll(page int, pageSize int, nameFilter string, cate
 	return productResponses, total, nil
 }
 
-func (uc *ProductUseCase) Create(p product.Product) (*product.ProductResponse, error) {
+func (uc *ProductUseCase) GetAllToAdmin(page int,
+	pageSize int,
+	nameFilter string,
+	categoryIDs []uint,
+	host string) ([]product.Product, int64, error) {
+	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range products {
+		for j := range products[i].Images {
+			products[i].Images[j].ImageURL = utils.GenerateImageURL(host, products[i].Images[j].PublicID)
+		}
+	}
+
+	return products, total, nil
+}
+
+func (uc *ProductUseCase) Create(p product.Product) (*product.Product, error) {
 
 	if strings.TrimSpace(p.Slug) == "" {
 		p.Slug = product.GenerateSlug()
@@ -66,7 +96,7 @@ func (uc *ProductUseCase) Create(p product.Product) (*product.ProductResponse, e
 		return nil, err
 	}
 
-	return p.ToResponse(), nil
+	return &p, nil
 }
 
 func (uc *ProductUseCase) GetBySlug(slug string) (*product.ProductResponse, error) {
@@ -76,6 +106,15 @@ func (uc *ProductUseCase) GetBySlug(slug string) (*product.ProductResponse, erro
 	}
 
 	return product.ToResponse(), nil
+}
+
+func (uc *ProductUseCase) GetBySlugToAdmin(slug string) (*product.Product, error) {
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
 }
 
 func (uc *ProductUseCase) Delete(slug string) error {
@@ -114,13 +153,13 @@ func (uc *ProductUseCase) Delete(slug string) error {
 	return nil
 }
 
-func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (*product.ProductResponse, error) {
+func (uc *ProductUseCase) Update(slug string, updatedProduct product.Product) (*product.Product, error) {
 	product, err := uc.repo.UpdateBySlug(slug, updatedProduct)
 	if err != nil {
-		return product.ToResponse(), err
+		return &product, err
 	}
 
-	return product.ToResponse(), nil
+	return &product, nil
 }
 
 func (uc *ProductUseCase) AddImagesToProduct(slug string, imageURLs []image.UploadedImage) error {
