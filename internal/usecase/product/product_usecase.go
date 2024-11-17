@@ -56,7 +56,7 @@ func (uc *ProductUseCase) GetAllToAdmin(page int,
 	nameFilter string,
 	categoryIDs []uint,
 	host string) ([]product.Product, int64, error) {
-	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
+	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, false)
 	if err != nil {
 		return nil, 0, err
 	}
