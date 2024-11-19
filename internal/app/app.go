@@ -9,34 +9,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	api_auth "github.com/reinaldo-silva/savina-stock/api/auth"
-	api_category "github.com/reinaldo-silva/savina-stock/api/category"
-	api_image "github.com/reinaldo-silva/savina-stock/api/image"
-	api_product "github.com/reinaldo-silva/savina-stock/api/product"
-	api_user "github.com/reinaldo-silva/savina-stock/api/user"
 	"github.com/reinaldo-silva/savina-stock/config"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/auth"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
-	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/image_service"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product_image"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/user"
+	"github.com/reinaldo-silva/savina-stock/internal/infrastructure/db/gorm"
+	s3_provider "github.com/reinaldo-silva/savina-stock/internal/infrastructure/image_provider/aws"
 	jwt_middleware "github.com/reinaldo-silva/savina-stock/internal/middleware/jwt"
-	s3_provider "github.com/reinaldo-silva/savina-stock/internal/provider/aws"
-	category_repository "github.com/reinaldo-silva/savina-stock/internal/repository/category"
-	image_repository "github.com/reinaldo-silva/savina-stock/internal/repository/image"
-	product_repository "github.com/reinaldo-silva/savina-stock/internal/repository/product"
-	user_repository "github.com/reinaldo-silva/savina-stock/internal/repository/user"
-	service "github.com/reinaldo-silva/savina-stock/internal/service/image"
-	usecase_category "github.com/reinaldo-silva/savina-stock/internal/usecase/category"
-	usecase_image "github.com/reinaldo-silva/savina-stock/internal/usecase/image"
-	usecase_product "github.com/reinaldo-silva/savina-stock/internal/usecase/product"
-	usecase_user "github.com/reinaldo-silva/savina-stock/internal/usecase/user"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 type App struct {
 	Router *chi.Mux
-	DB     *gorm.DB
 }
 
 func (a *App) Initialize(cfg *config.Config) {
@@ -44,20 +30,7 @@ func (a *App) Initialize(cfg *config.Config) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require",
 		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
 
-	var err error
-	a.DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("failed to connect database: ", err)
-	}
-
-	err = a.DB.AutoMigrate(
-		&product.Product{},
-		&image.ProductImage{},
-		&category.Category{},
-		&user.User{})
-	if err != nil {
-		log.Fatal("failed to migrate database: ", err)
-	}
+	connection := gorm.NewGormDB(dsn)
 
 	s3Config := config.LoadS3Config()
 
@@ -89,23 +62,23 @@ func (a *App) Initialize(cfg *config.Config) {
 	a.Router.Use(middleware.Logger)
 	a.Router.Use(middleware.Recoverer)
 
-	userRepo := user_repository.NewGormUserRepository(a.DB)
-	productRepo := product_repository.NewGormProductRepository(a.DB)
-	categoryRepo := category_repository.NewCategoryRepository(a.DB)
-	imageRepo := image_repository.NewGormImageRepository(a.DB)
+	userRepo := gorm.NewGormUserRepository(connection)
+	productRepo := gorm.NewGormProductRepository(connection)
+	categoryRepo := gorm.NewCategoryRepository(connection)
+	imageRepo := gorm.NewGormImageRepository(connection)
 
-	imageService := service.NewImageService(s3Provider)
+	imageService := image_service.NewImageService(s3Provider)
 
-	userUseCase := usecase_user.NewUserUseCase(userRepo)
-	productUseCase := usecase_product.NewProductUseCase(productRepo, categoryRepo, imageRepo, imageService)
-	categoryUseCase := usecase_category.NewCategoryUseCase(categoryRepo)
-	imageUseCase := usecase_image.NewImageUseCase(imageService, imageRepo, productRepo)
+	userUseCase := user.NewUserUseCase(userRepo)
+	productUseCase := product.NewProductUseCase(productRepo, categoryRepo, imageRepo, imageService)
+	categoryUseCase := category.NewCategoryUseCase(categoryRepo)
+	imageUseCase := product_image.NewImageUseCase(imageService, imageRepo)
 
-	authHandler := api_auth.NewAuthHandler(userUseCase)
-	userHandler := api_user.NewUserHandler(userUseCase)
-	productHandler := api_product.NewProductHandler(productUseCase, imageService)
-	categoryHandler := api_category.NewCategoryHandler(categoryUseCase)
-	imageHandler := api_image.NewImageHandler(imageUseCase)
+	authHandler := auth.NewAuthHandler(userUseCase)
+	userHandler := user.NewUserHandler(userUseCase)
+	productHandler := product.NewProductHandler(productUseCase, imageService)
+	categoryHandler := category.NewCategoryHandler(categoryUseCase)
+	imageHandler := product_image.NewImageHandler(imageUseCase)
 
 	a.Router.Route("/users", func(r chi.Router) {
 		r.Use(jwtMiddleware.ValidateToken)

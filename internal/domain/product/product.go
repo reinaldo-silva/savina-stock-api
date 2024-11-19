@@ -3,24 +3,27 @@ package product
 import (
 	"time"
 
-	category_model "github.com/reinaldo-silva/savina-stock/internal/domain/category"
-	"github.com/reinaldo-silva/savina-stock/internal/domain/image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product_audit"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product_image"
+	"github.com/reinaldo-silva/savina-stock/utils"
 	"github.com/segmentio/ksuid"
+	"gorm.io/gorm"
 )
 
 type Product struct {
-	ID          uint                      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name        string                    `gorm:"type:varchar(100);not null" json:"name"`
-	Slug        string                    `gorm:"type:varchar(150);unique;not null" json:"slug"`
-	Description string                    `gorm:"type:text" json:"description"`
-	Price       float64                   `gorm:"type:decimal(10,2);not null" json:"price"`
-	Cost        float64                   `gorm:"type:decimal(10,2);" json:"cost"`
-	Stock       int                       `gorm:"not null" json:"stock"`
-	Available   bool                      `gorm:"not null;default:false" json:"available"`
-	Images      []image.ProductImage      `gorm:"foreignKey:ProductID" json:"images"`
-	Categories  []category_model.Category `gorm:"many2many:product_categories;" json:"categories"`
-	CreatedAt   time.Time                 `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time                 `gorm:"autoUpdateTime" json:"updated_at"`
+	ID          uint                         `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name        string                       `gorm:"type:varchar(100);not null" json:"name"`
+	Slug        string                       `gorm:"type:varchar(150);unique;not null" json:"slug"`
+	Description string                       `gorm:"type:text" json:"description"`
+	Price       float64                      `gorm:"type:decimal(10,2);not null" json:"price"`
+	Cost        float64                      `gorm:"type:decimal(10,2);" json:"cost"`
+	Stock       int                          `gorm:"not null" json:"stock"`
+	Available   bool                         `gorm:"not null;default:false" json:"available"`
+	Images      []product_image.ProductImage `gorm:"foreignKey:ProductID" json:"images"`
+	Categories  []category.Category          `gorm:"many2many:product_categories;" json:"categories"`
+	CreatedAt   time.Time                    `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time                    `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 type ProductRepository interface {
@@ -38,20 +41,15 @@ type ProductRepository interface {
 	UpdateProductCategories(product *Product) error
 }
 
-func GenerateSlug() string {
-	id := ksuid.New().String()
-	return id[:8]
-}
-
 type ProductResponse struct {
-	ID          uint                      `json:"id"`
-	Name        string                    `json:"name"`
-	Slug        string                    `json:"slug"`
-	Description string                    `json:"description"`
-	Price       float64                   `json:"price"`
-	Stock       int                       `json:"stock"`
-	Images      []image.ProductImage      `json:"images"`
-	Categories  []category_model.Category `json:"categories"`
+	ID          uint                         `json:"id"`
+	Name        string                       `json:"name"`
+	Slug        string                       `json:"slug"`
+	Description string                       `json:"description"`
+	Price       float64                      `json:"price"`
+	Stock       int                          `json:"stock"`
+	Images      []product_image.ProductImage `json:"images"`
+	Categories  []category.Category          `json:"categories"`
 }
 
 func (p *Product) ToResponse() *ProductResponse {
@@ -65,4 +63,56 @@ func (p *Product) ToResponse() *ProductResponse {
 		Images:      p.Images,
 		Categories:  p.Categories,
 	}
+}
+
+func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
+	var oldProduct Product
+	if err := tx.Unscoped().First(&oldProduct, p.ID).Error; err != nil {
+		return err
+	}
+
+	userID := getCurrentUserID(tx)
+
+	oldValue := make(map[string]interface{})
+	newValue := make(map[string]interface{})
+
+	if oldProduct.Name != p.Name {
+		oldValue["name"] = oldProduct.Name
+		newValue["name"] = p.Name
+	}
+	if oldProduct.Price != p.Price {
+		oldValue["price"] = oldProduct.Price
+		newValue["price"] = p.Price
+	}
+	if oldProduct.Stock != p.Stock {
+		oldValue["stock"] = oldProduct.Stock
+		newValue["stock"] = p.Stock
+	}
+
+	audit := product_audit.ProductAudit{
+		ProductID:   p.ID,
+		UserID:      userID,
+		Action:      "updated",
+		OldValue:    utils.ToJSON(oldValue),
+		NewValue:    utils.ToJSON(newValue),
+		Description: "Product updated",
+	}
+
+	if err := tx.Create(&audit).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GenerateSlug() string {
+	id := ksuid.New().String()
+	return id[:8]
+}
+
+func getCurrentUserID(tx *gorm.DB) uint {
+	if userID, ok := tx.Statement.Context.Value("currentUserID").(uint); ok {
+		return userID
+	}
+	return 0
 }
