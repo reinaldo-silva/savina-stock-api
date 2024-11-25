@@ -107,6 +107,7 @@ func (a *App) Initialize(cfg *config.Config) {
 			r.Patch("/{slug}/upload-image", productHandler.UploadImages)
 			r.Patch("/{slug}/categories/link", productHandler.LinkCategories)
 			r.Patch("/{slug}/cover/{uuid}", imageHandler.SetImageAsCover)
+			r.Patch("/{slug}/available/switch", productHandler.SwitchAvailable)
 		})
 
 	})

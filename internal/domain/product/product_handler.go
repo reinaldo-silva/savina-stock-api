@@ -49,7 +49,7 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	products, total, err := h.useCase.GetAll(page, pageSize, nameFilter, categoryIDs, r.Host)
+	products, total, err := h.useCase.GetAll(r.Context(), page, pageSize, nameFilter, categoryIDs, r.Host)
 	if err != nil {
 		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
@@ -89,7 +89,7 @@ func (h *ProductHandler) GetProductsToAdmin(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	products, total, err := h.useCase.GetAllToAdmin(page, pageSize, nameFilter, categoryIDs, r.Host)
+	products, total, err := h.useCase.GetAllToAdmin(r.Context(), page, pageSize, nameFilter, categoryIDs, r.Host)
 	if err != nil {
 		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
@@ -412,5 +412,23 @@ func (h *ProductHandler) LinkCategories(w http.ResponseWriter, r *http.Request) 
 	appResponse := response.NewAppResponse(nil, "Product categories linked successfully", nil, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appResponse.StatusCode)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) SwitchAvailable(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	err := h.useCase.SwitchAvailable(slug)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(nil, "Visibilidade alterada com sucesso", nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)
 }

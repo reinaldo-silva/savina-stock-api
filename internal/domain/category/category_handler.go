@@ -55,14 +55,6 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if len(categories) == 0 {
-		appError := error.NewAppError("No categories found", http.StatusNotFound)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(appError.StatusCode)
-		json.NewEncoder(w).Encode(appError)
-		return
-	}
-
 	appResponse := response.NewAppResponse(categories, "Categories fetched successfully", nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

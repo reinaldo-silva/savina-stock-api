@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -17,6 +18,7 @@ func NewGormProductRepository(db *gorm.DB) product.ProductRepository {
 }
 
 func (r *GormProductRepository) GetAll(
+	ctx context.Context,
 	page int,
 	pageSize int,
 	nameFilter string,
@@ -25,7 +27,7 @@ func (r *GormProductRepository) GetAll(
 	var products []product.Product
 	var total int64
 
-	query := r.db.Preload("Images").Preload("Categories")
+	query := r.db.WithContext(ctx).Preload("Images").Preload("Categories")
 
 	if nameFilter != "" {
 		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
@@ -136,4 +138,8 @@ func (r *GormProductRepository) ClearProductCategories(productID uint) error {
 
 func (r *GormProductRepository) UpdateProductCategories(product *product.Product) error {
 	return r.db.Model(product).Association("Categories").Replace(product.Categories)
+}
+
+func (r *GormProductRepository) SwitchAvailable(product product.Product) error {
+	return r.db.Model(&product).Where("slug = ?", product.Slug).Update("available", !product.Available).Error
 }

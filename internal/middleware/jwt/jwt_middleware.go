@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	error_response "github.com/reinaldo-silva/savina-stock/package/response/error"
+	"github.com/reinaldo-silva/savina-stock/utils"
 )
 
 type JwtMiddleware struct {
@@ -20,13 +21,6 @@ type Claims struct {
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
-
-type contextKey string
-
-const (
-	userIDKey   contextKey = "userID"
-	userRoleKey contextKey = "userRole"
-)
 
 func NewJwtMiddleware(secretKey []byte) *JwtMiddleware {
 	return &JwtMiddleware{secretKey: secretKey}
@@ -72,8 +66,8 @@ func (m *JwtMiddleware) ValidateToken(next http.Handler) http.Handler {
 			userID := claims.UserID
 			role := claims.Role
 
-			ctx := context.WithValue(r.Context(), userIDKey, userID)
-			ctx = context.WithValue(ctx, userRoleKey, role)
+			ctx := context.WithValue(r.Context(), utils.GetContextKeys().UserIDKey, userID)
+			ctx = context.WithValue(ctx, utils.GetContextKeys().UserRoleKey, role)
 			r = r.WithContext(ctx)
 		} else {
 			appError := error_response.NewAppError("Could not parse token claims", http.StatusUnauthorized)
@@ -91,7 +85,7 @@ func (m *JwtMiddleware) RequireRoles(allowedRoles ...string) func(http.Handler) 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			role, ok := r.Context().Value(userRoleKey).(string)
+			role, ok := r.Context().Value(utils.GetContextKeys().UserRoleKey).(string)
 
 			if !ok {
 				appError := error_response.NewAppError("Role not found in context", http.StatusForbidden)

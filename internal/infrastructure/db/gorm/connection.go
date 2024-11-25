@@ -5,6 +5,10 @@ import (
 
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product_audit"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/product_image"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/sale"
+	"github.com/reinaldo-silva/savina-stock/internal/domain/sale_item"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/user"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,9 +22,12 @@ func NewGormDB(dsn string) *gorm.DB {
 
 	err = connection.AutoMigrate(
 		&product.Product{},
-		// &domain.ProductImage{},
+		&product_image.ProductImage{},
 		&category.Category{},
-		&user.User{})
+		&user.User{},
+		&product_audit.ProductAudit{},
+		&sale.Sale{},
+		&sale_item.SaleItem{})
 	if err != nil {
 		log.Fatal("failed to migrate database: ", err)
 	}

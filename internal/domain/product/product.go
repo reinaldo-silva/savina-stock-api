@@ -1,14 +1,13 @@
 package product
 
 import (
+	"context"
 	"time"
 
 	"github.com/reinaldo-silva/savina-stock/internal/domain/category"
-	"github.com/reinaldo-silva/savina-stock/internal/domain/product_audit"
 	"github.com/reinaldo-silva/savina-stock/internal/domain/product_image"
-	"github.com/reinaldo-silva/savina-stock/utils"
+
 	"github.com/segmentio/ksuid"
-	"gorm.io/gorm"
 )
 
 type Product struct {
@@ -28,6 +27,7 @@ type Product struct {
 
 type ProductRepository interface {
 	GetAll(
+		ctx context.Context,
 		page int,
 		pageSize int,
 		nameFilter string,
@@ -39,6 +39,7 @@ type ProductRepository interface {
 	UpdateBySlug(slug string, updatedProduct Product) (Product, error)
 	ClearProductCategories(productID uint) error
 	UpdateProductCategories(product *Product) error
+	SwitchAvailable(product Product) error
 }
 
 type ProductResponse struct {
@@ -65,54 +66,52 @@ func (p *Product) ToResponse() *ProductResponse {
 	}
 }
 
-func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
-	var oldProduct Product
-	if err := tx.Unscoped().First(&oldProduct, p.ID).Error; err != nil {
-		return err
-	}
+// func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
+// 	var oldProduct Product
+// 	if err := tx.Unscoped().First(&oldProduct, p.ID).Error; err != nil {
+// 		return err
+// 	}
 
-	userID := getCurrentUserID(tx)
+// 	userID, err := utils.GetCurrentUserID(tx)
+// 	fmt.Println(userID)
 
-	oldValue := make(map[string]interface{})
-	newValue := make(map[string]interface{})
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if oldProduct.Name != p.Name {
-		oldValue["name"] = oldProduct.Name
-		newValue["name"] = p.Name
-	}
-	if oldProduct.Price != p.Price {
-		oldValue["price"] = oldProduct.Price
-		newValue["price"] = p.Price
-	}
-	if oldProduct.Stock != p.Stock {
-		oldValue["stock"] = oldProduct.Stock
-		newValue["stock"] = p.Stock
-	}
+// 	oldValue := make(map[string]interface{})
+// 	newValue := make(map[string]interface{})
 
-	audit := product_audit.ProductAudit{
-		ProductID:   p.ID,
-		UserID:      userID,
-		Action:      "updated",
-		OldValue:    utils.ToJSON(oldValue),
-		NewValue:    utils.ToJSON(newValue),
-		Description: "Product updated",
-	}
+// 	if oldProduct.Name != p.Name {
+// 		oldValue["name"] = oldProduct.Name
+// 		newValue["name"] = p.Name
+// 	}
+// 	if oldProduct.Price != p.Price {
+// 		oldValue["price"] = oldProduct.Price
+// 		newValue["price"] = p.Price
+// 	}
+// 	if oldProduct.Stock != p.Stock {
+// 		oldValue["stock"] = oldProduct.Stock
+// 		newValue["stock"] = p.Stock
+// 	}
 
-	if err := tx.Create(&audit).Error; err != nil {
-		return err
-	}
+// 	audit := product_audit.ProductAudit{
+// 		ProductID:   p.ID,
+// 		UserID:      userID,
+// 		Action:      "updated",
+// 		OldValue:    utils.ToJSON(oldValue),
+// 		NewValue:    utils.ToJSON(newValue),
+// 		Description: "Product updated",
+// 	}
 
-	return nil
-}
+// 	if err := tx.Create(&audit).Error; err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 func GenerateSlug() string {
 	id := ksuid.New().String()
 	return id[:8]
-}
-
-func getCurrentUserID(tx *gorm.DB) uint {
-	if userID, ok := tx.Statement.Context.Value("currentUserID").(uint); ok {
-		return userID
-	}
-	return 0
 }

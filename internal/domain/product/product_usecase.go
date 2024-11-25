@@ -1,6 +1,7 @@
 package product
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -31,12 +32,13 @@ func NewProductUseCase(
 }
 
 func (uc *ProductUseCase) GetAll(
+	ctx context.Context,
 	page int,
 	pageSize int,
 	nameFilter string,
 	categoryIDs []uint,
 	host string) ([]ProductResponse, int64, error) {
-	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, true)
+	products, total, err := uc.repo.GetAll(ctx, page, pageSize, nameFilter, categoryIDs, true)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -55,12 +57,14 @@ func (uc *ProductUseCase) GetAll(
 	return productResponses, total, nil
 }
 
-func (uc *ProductUseCase) GetAllToAdmin(page int,
+func (uc *ProductUseCase) GetAllToAdmin(
+	ctx context.Context,
+	page int,
 	pageSize int,
 	nameFilter string,
 	categoryIDs []uint,
 	host string) ([]Product, int64, error) {
-	products, total, err := uc.repo.GetAll(page, pageSize, nameFilter, categoryIDs, false)
+	products, total, err := uc.repo.GetAll(ctx, page, pageSize, nameFilter, categoryIDs, false)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -221,6 +225,21 @@ func (uc *ProductUseCase) UpdateProductCategories(slug string, categoryIDs []int
 	err = uc.repo.UpdateProductCategories(product)
 	if err != nil {
 		return fmt.Errorf("failed to update product categories: %v", err)
+	}
+
+	return nil
+}
+
+func (uc *ProductUseCase) SwitchAvailable(slug string) error {
+
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return fmt.Errorf("product with slug %s not found", slug)
+	}
+
+	err = uc.repo.SwitchAvailable(*product)
+	if err != nil {
+		return fmt.Errorf("houve um erro ao alterar o visibilidade do produto com slug %s, com o error: %v", slug, err)
 	}
 
 	return nil
