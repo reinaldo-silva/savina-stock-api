@@ -108,6 +108,8 @@ func (a *App) Initialize(cfg *config.Config) {
 			r.Patch("/{slug}/categories/link", productHandler.LinkCategories)
 			r.Patch("/{slug}/cover/{uuid}", imageHandler.SetImageAsCover)
 			r.Patch("/{slug}/available/switch", productHandler.SwitchAvailable)
+			r.Patch("/{slug}/stock-entry", productHandler.ProductStockEntry)
+			r.Patch("/{slug}/stock-out", productHandler.ProductStockOut)
 		})
 
 	})

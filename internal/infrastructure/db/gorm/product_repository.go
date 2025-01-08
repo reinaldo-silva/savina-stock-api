@@ -143,3 +143,7 @@ func (r *GormProductRepository) UpdateProductCategories(product *product.Product
 func (r *GormProductRepository) SwitchAvailable(product product.Product) error {
 	return r.db.Model(&product).Where("slug = ?", product.Slug).Update("available", !product.Available).Error
 }
+
+func (r *GormProductRepository) UpdateProductStock(product *product.Product) error {
+	return r.db.Model(product).Update("stock", product.Stock).Error
+}

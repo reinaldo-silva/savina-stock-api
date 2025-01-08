@@ -432,3 +432,65 @@ func (h *ProductHandler) SwitchAvailable(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(appResponse)
 }
+
+func (h *ProductHandler) ProductStockEntry(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	var body struct {
+		Quantity int `json:"quantity"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		appError := error.NewAppError("Invalid request payload", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	err = h.useCase.ProductStockEntry(slug, body.Quantity)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(nil, "Quantidade do produto atualizada com sucesso", nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(appResponse)
+}
+
+func (h *ProductHandler) ProductStockOut(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	var body struct {
+		Quantity int `json:"quantity"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		appError := error.NewAppError("Invalid request payload", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	err = h.useCase.ProductStockOut(slug, body.Quantity)
+	if err != nil {
+		appError := error.NewAppError(err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(appError.StatusCode)
+		json.NewEncoder(w).Encode(appError)
+		return
+	}
+
+	appResponse := response.NewAppResponse(nil, "Saída de estoque do produto registrada com sucesso", nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(appResponse)
+}

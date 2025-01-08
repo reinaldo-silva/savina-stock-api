@@ -40,6 +40,7 @@ type ProductRepository interface {
 	ClearProductCategories(productID uint) error
 	UpdateProductCategories(product *Product) error
 	SwitchAvailable(product Product) error
+	UpdateProductStock(product *Product) error
 }
 
 type ProductResponse struct {

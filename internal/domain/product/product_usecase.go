@@ -244,3 +244,41 @@ func (uc *ProductUseCase) SwitchAvailable(slug string) error {
 
 	return nil
 }
+
+func (uc *ProductUseCase) ProductStockEntry(slug string, quantity int) error {
+
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return fmt.Errorf("product with slug %s not found", slug)
+	}
+
+	product.Stock += quantity
+
+	err = uc.repo.UpdateProductStock(product)
+	if err != nil {
+		return fmt.Errorf("houve um erro ao atualizar a quantidade do produto com slug %s, com o error: %v", slug, err)
+	}
+
+	return nil
+}
+
+func (uc *ProductUseCase) ProductStockOut(slug string, quantity int) error {
+
+	product, err := uc.repo.FindBySlug(slug)
+	if err != nil {
+		return fmt.Errorf("product with slug %s not found", slug)
+	}
+
+	if product.Stock < quantity {
+		return fmt.Errorf("quantidade de saída %d excede o estoque atual de %d", quantity, product.Stock)
+	}
+
+	product.Stock -= quantity
+
+	err = uc.repo.UpdateProductStock(product)
+	if err != nil {
+		return fmt.Errorf("houve um erro ao registrar a saída de estoque do produto com slug %s, com o error: %v", slug, err)
+	}
+
+	return nil
+}
