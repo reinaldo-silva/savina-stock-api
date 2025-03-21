@@ -46,7 +46,7 @@ func (r *GormProductRepository) GetAll(
 		return nil, 0, err
 	}
 
-	if err := query.Order("id ASC").Offset((page - 1) * pageSize).Limit(pageSize).Find(&products).Error; err != nil {
+	if err := query.Order("stock DESC").Order("id ASC").Offset((page - 1) * pageSize).Limit(pageSize).Find(&products).Error; err != nil {
 		return nil, 0, err
 	}
 
