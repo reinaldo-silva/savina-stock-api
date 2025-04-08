@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,6 +26,18 @@ type App struct {
 	Router *chi.Mux
 }
 
+func limitRequestBodySize(maxBytes int64) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.ContentLength > maxBytes {
+				http.Error(w, "Request too large", http.StatusRequestEntityTooLarge)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func (a *App) Initialize(cfg *config.Config) {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require",
@@ -40,6 +53,8 @@ func (a *App) Initialize(cfg *config.Config) {
 	}
 
 	a.Router = chi.NewRouter()
+
+	a.Router.Use(limitRequestBodySize(10 << 20)) // 10MB
 
 	isProduction := os.Getenv("ENVIRONMENT") == "production"
 
@@ -142,6 +157,15 @@ func (a *App) Initialize(cfg *config.Config) {
 }
 
 func (a *App) Run(cfg *config.Config) {
+
+	srv := &http.Server{
+		Addr:         ":" + cfg.ServerPort,
+		Handler:      a.Router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+
 	fmt.Printf("Server running on port %s\n", cfg.ServerPort)
-	log.Fatal(http.ListenAndServe(":"+cfg.ServerPort, a.Router))
+	log.Fatal(srv.ListenAndServe())
 }
